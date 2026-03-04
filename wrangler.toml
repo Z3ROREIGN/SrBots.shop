@@ -1,5 +1,5 @@
 # Configuração do Cloudflare Worker SrBots.shop
-name = "srbots-shop"
+name = "srbots"
 main = "src/worker.js"
 compatibility_date = "2023-12-01"
 
