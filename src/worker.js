@@ -1,7 +1,7 @@
 /**
  * SrBots.shop - Cloudflare Worker
  * Backend completo: API REST + Servir arquivos estáticos
- * Versão: 1.0.0
+ * Versão: 1.1.0
  */
 
 import { handleAuth } from './routes/auth.js';
@@ -14,10 +14,6 @@ import { handleStatus } from './routes/status.js';
 import { handleWebhook } from './routes/webhook.js';
 import { handleUser } from './routes/user.js';
 import { corsHeaders, jsonResponse, errorResponse } from './utils/helpers.js';
-
-// Adicionar importação de funções de autenticação se necessário ou definir localmente
-// No caso, as funções verifyAuth e verifyJWT já estão definidas no final do arquivo, 
-// mas precisamos garantir que o roteamento de arquivos estáticos funcione.
 
 export default {
   async fetch(request, env, ctx) {
@@ -47,7 +43,6 @@ export default {
 
 async function handleAPI(request, env, ctx, path) {
   // Webhook MisticPay (sem autenticação JWT)
-  // Aceitar tanto /api/webhook/payment quanto /api/webhook/misticpay
   if (path === '/api/webhook/payment' || path === '/api/webhook/misticpay') {
     return await handleWebhook(request, env);
   }
@@ -173,7 +168,12 @@ function base64UrlDecode(str) {
 }
 
 async function serveStatic(request, env, path) {
-  // Mapear rotas para arquivos HTML
+  // Se não houver ASSETS (Workers Site não configurado corretamente), erro imediato
+  if (!env.ASSETS) {
+    return errorResponse('Assets binding not found. Please check wrangler.toml [site] configuration.', 500);
+  }
+
+  // Mapear rotas amigáveis para arquivos HTML
   const routes = {
     '/': '/index.html',
     '/loja': '/pages/store.html',
@@ -186,40 +186,33 @@ async function serveStatic(request, env, path) {
     '/status': '/pages/status.html',
   };
 
-  // Se o caminho não tiver extensão e estiver no mapeamento, usa o mapeamento
-  // Caso contrário, usa o próprio path (para .css, .js, etc)
   let filePath = routes[path] || path;
   
-  // Garantir que caminhos como /assets/... comecem com /
+  // Garantir que o path comece com /
   if (!filePath.startsWith('/')) filePath = '/' + filePath;
 
-  // Tentar buscar do KV (ASSETS) - Cloudflare Workers Site
-  if (env.ASSETS) {
-    try {
-      // Construir a URL completa para o asset
-      const assetUrl = new URL(request.url);
-      assetUrl.pathname = filePath;
-      
-      const asset = await env.ASSETS.fetch(new Request(assetUrl.toString(), request));
-      if (asset.status !== 404) return asset;
-    } catch (e) {
-      console.error('Asset fetch error:', e);
+  // Tentar buscar o arquivo solicitado
+  try {
+    const assetUrl = new URL(request.url);
+    assetUrl.pathname = filePath;
+    
+    let response = await env.ASSETS.fetch(new Request(assetUrl.toString(), request));
+    
+    // Se não encontrou o arquivo e não tem extensão (ex: /dashboard), tenta servir o index.html
+    if (response.status === 404 && !filePath.includes('.')) {
+      const indexUrl = new URL(request.url);
+      indexUrl.pathname = '/index.html';
+      response = await env.ASSETS.fetch(new Request(indexUrl.toString(), request));
     }
-  }
 
-  // Fallback para index.html (SPA)
-  if (!filePath.includes('.')) {
-    if (env.ASSETS) {
-      try {
-        const indexUrl = new URL(request.url);
-        indexUrl.pathname = '/index.html';
-        const indexAsset = await env.ASSETS.fetch(new Request(indexUrl.toString(), request));
-        if (indexAsset.status !== 404) return indexAsset;
-      } catch (e) {
-        console.error('Index fetch error:', e);
-      }
+    // Se ainda for 404, retorna erro amigável
+    if (response.status === 404) {
+      return errorResponse(`Arquivo não encontrado: ${filePath}`, 404);
     }
-  }
 
-  return errorResponse('Arquivo não encontrado', 404);
+    return response;
+  } catch (e) {
+    console.error('Static serve error:', e);
+    return errorResponse('Erro ao carregar arquivo estático', 500);
+  }
 }
