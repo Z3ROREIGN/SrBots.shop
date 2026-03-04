@@ -38,7 +38,8 @@ export default {
 
     } catch (err) {
       console.error('Worker error:', err);
-      return errorResponse('Erro interno do servidor', 500);
+      // Retornar o erro detalhado para ajudar o usuário a diagnosticar (D1 missing, etc)
+      return errorResponse(`Erro Interno: ${err.message}. Certifique-se de que o Banco D1 e os Secrets estão configurados no painel da Cloudflare.`, 500);
     }
   }
 };
