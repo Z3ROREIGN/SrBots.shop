@@ -1,7 +1,7 @@
 /**
  * SrBots.shop - Cloudflare Worker
  * Backend completo: API REST + Servir arquivos estáticos
- * Versão: 1.1.0
+ * Versão: 1.2.0 (Suporte para Workers Site e Cloudflare Pages)
  */
 
 import { handleAuth } from './routes/auth.js';
@@ -31,7 +31,10 @@ export default {
         return await handleAPI(request, env, ctx, path);
       }
 
-      // ── Servir arquivos estáticos (KV ou Assets) ──────────────
+      // ── Servir arquivos estáticos ─────────────────────────────
+      // Se estiver usando Cloudflare Pages, os arquivos são servidos automaticamente
+      // a menos que o Worker intercepte tudo. Se env.ASSETS não existir,
+      // assumimos que o Cloudflare deve lidar com os estáticos ou que há um erro de config.
       return await serveStatic(request, env, path);
 
     } catch (err) {
@@ -42,7 +45,7 @@ export default {
 };
 
 async function handleAPI(request, env, ctx, path) {
-  // Webhook MisticPay (sem autenticação JWT)
+  // Webhook MisticPay
   if (path === '/api/webhook/payment' || path === '/api/webhook/misticpay') {
     return await handleWebhook(request, env);
   }
@@ -52,12 +55,12 @@ async function handleAPI(request, env, ctx, path) {
     return await handleStatus(request, env);
   }
 
-  // Autenticação (login, registro, refresh)
+  // Autenticação
   if (path.startsWith('/api/auth/')) {
     return await handleAuth(request, env);
   }
 
-  // Produtos (listagem pública)
+  // Produtos
   if (path.startsWith('/api/products')) {
     return await handleProducts(request, env);
   }
@@ -110,7 +113,6 @@ async function verifyAuth(request, env) {
     const payload = await verifyJWT(token, env.JWT_SECRET);
     if (!payload) return { user: null };
 
-    // Verificar se sessão existe no banco
     const session = await env.DB.prepare(
       'SELECT s.*, u.id as uid, u.email, u.username, u.role, u.is_banned, u.bot_limit FROM sessions s JOIN users u ON s.user_id = u.id WHERE s.id = ? AND s.expires_at > datetime("now")'
     ).bind(payload.sessionId).first();
@@ -141,7 +143,7 @@ async function verifyJWT(token, secret) {
     const key = await crypto.subtle.importKey(
       'raw', encoder.encode(secret),
       { name: 'HMAC', hash: 'SHA-256' },
-      false, ['verify']
+      false, ['sign', 'verify']
     );
 
     const data = encoder.encode(`${parts[0]}.${parts[1]}`);
@@ -168,12 +170,24 @@ function base64UrlDecode(str) {
 }
 
 async function serveStatic(request, env, path) {
-  // Se não houver ASSETS (Workers Site não configurado corretamente), erro imediato
+  // Se estiver usando Cloudflare Pages (sem binding ASSETS explícito no Worker),
+  // o Worker pode deixar passar para o Pages servir os arquivos.
   if (!env.ASSETS) {
-    return errorResponse('Assets binding not found. Please check wrangler.toml [site] configuration.', 500);
+    // Se for uma rota de API que chegou aqui, erro 404
+    if (path.startsWith('/api/')) return errorResponse('API Route not found', 404);
+    
+    // Se for um arquivo com extensão (ex: .css, .js, .png), deixa o Cloudflare servir
+    if (path.includes('.')) {
+      return fetch(request);
+    }
+    
+    // Para rotas amigáveis (ex: /loja), serve o index.html para o roteamento do frontend
+    const url = new URL(request.url);
+    url.pathname = '/index.html';
+    return fetch(new Request(url.toString(), request));
   }
 
-  // Mapear rotas amigáveis para arquivos HTML
+  // Se env.ASSETS existir (Workers Site), usamos a lógica de busca no KV
   const routes = {
     '/': '/index.html',
     '/loja': '/pages/store.html',
@@ -187,32 +201,21 @@ async function serveStatic(request, env, path) {
   };
 
   let filePath = routes[path] || path;
-  
-  // Garantir que o path comece com /
   if (!filePath.startsWith('/')) filePath = '/' + filePath;
 
-  // Tentar buscar o arquivo solicitado
   try {
     const assetUrl = new URL(request.url);
     assetUrl.pathname = filePath;
-    
     let response = await env.ASSETS.fetch(new Request(assetUrl.toString(), request));
     
-    // Se não encontrou o arquivo e não tem extensão (ex: /dashboard), tenta servir o index.html
     if (response.status === 404 && !filePath.includes('.')) {
       const indexUrl = new URL(request.url);
       indexUrl.pathname = '/index.html';
       response = await env.ASSETS.fetch(new Request(indexUrl.toString(), request));
     }
 
-    // Se ainda for 404, retorna erro amigável
-    if (response.status === 404) {
-      return errorResponse(`Arquivo não encontrado: ${filePath}`, 404);
-    }
-
     return response;
   } catch (e) {
-    console.error('Static serve error:', e);
-    return errorResponse('Erro ao carregar arquivo estático', 500);
+    return fetch(request); // Fallback final
   }
 }
