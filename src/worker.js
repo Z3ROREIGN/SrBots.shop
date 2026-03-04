@@ -15,6 +15,10 @@ import { handleWebhook } from './routes/webhook.js';
 import { handleUser } from './routes/user.js';
 import { corsHeaders, jsonResponse, errorResponse } from './utils/helpers.js';
 
+// Adicionar importação de funções de autenticação se necessário ou definir localmente
+// No caso, as funções verifyAuth e verifyJWT já estão definidas no final do arquivo, 
+// mas precisamos garantir que o roteamento de arquivos estáticos funcione.
+
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
@@ -43,7 +47,8 @@ export default {
 
 async function handleAPI(request, env, ctx, path) {
   // Webhook MisticPay (sem autenticação JWT)
-  if (path === '/api/webhook/payment') {
+  // Aceitar tanto /api/webhook/payment quanto /api/webhook/misticpay
+  if (path === '/api/webhook/payment' || path === '/api/webhook/misticpay') {
     return await handleWebhook(request, env);
   }
 
@@ -181,23 +186,38 @@ async function serveStatic(request, env, path) {
     '/status': '/pages/status.html',
   };
 
+  // Se o caminho não tiver extensão e estiver no mapeamento, usa o mapeamento
+  // Caso contrário, usa o próprio path (para .css, .js, etc)
   let filePath = routes[path] || path;
+  
+  // Garantir que caminhos como /assets/... comecem com /
+  if (!filePath.startsWith('/')) filePath = '/' + filePath;
 
-  // Tentar buscar do KV (ASSETS)
+  // Tentar buscar do KV (ASSETS) - Cloudflare Workers Site
   if (env.ASSETS) {
     try {
-      const asset = await env.ASSETS.fetch(new Request(`${new URL(request.url).origin}${filePath}`));
+      // Construir a URL completa para o asset
+      const assetUrl = new URL(request.url);
+      assetUrl.pathname = filePath;
+      
+      const asset = await env.ASSETS.fetch(new Request(assetUrl.toString(), request));
       if (asset.status !== 404) return asset;
-    } catch {}
+    } catch (e) {
+      console.error('Asset fetch error:', e);
+    }
   }
 
   // Fallback para index.html (SPA)
   if (!filePath.includes('.')) {
-    filePath = '/index.html';
     if (env.ASSETS) {
       try {
-        return await env.ASSETS.fetch(new Request(`${new URL(request.url).origin}${filePath}`));
-      } catch {}
+        const indexUrl = new URL(request.url);
+        indexUrl.pathname = '/index.html';
+        const indexAsset = await env.ASSETS.fetch(new Request(indexUrl.toString(), request));
+        if (indexAsset.status !== 404) return indexAsset;
+      } catch (e) {
+        console.error('Index fetch error:', e);
+      }
     }
   }
 
