@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Status do Sistema — SrBots</title>
+  <link rel="icon" href="/assets/img/favicon.ico">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/assets/css/main.css">
+</head>
+<body>
+<nav class="navbar">
+  <div class="navbar-inner">
+    <a href="/" class="navbar-logo"><div class="logo-icon">🤖</div><span class="gradient-text">SrBots</span></a>
+    <ul class="navbar-nav">
+      <li><a href="/">Início</a></li>
+      <li><a href="/loja">Loja</a></li>
+      <li><a href="/status" class="active">Status</a></li>
+    </ul>
+    <div class="navbar-actions"><div id="navbar-auth"></div></div>
+  </div>
+</nav>
+
+<div style="padding-top:70px;min-height:100vh">
+  <div style="background:var(--bg-secondary);border-bottom:1px solid var(--border);padding:3rem 0;text-align:center">
+    <div class="container">
+      <div id="overall-status-icon" style="font-size:4rem;margin-bottom:1rem">⏳</div>
+      <h1 id="overall-status-text" style="margin-bottom:0.5rem">Verificando status...</h1>
+      <p class="text-secondary" id="status-updated">Carregando...</p>
+    </div>
+  </div>
+
+  <div class="container" style="padding-top:3rem;padding-bottom:4rem;max-width:800px">
+    <!-- Serviços -->
+    <div class="card" style="margin-bottom:2rem">
+      <h3 style="margin-bottom:1.5rem">🔧 Status dos Serviços</h3>
+      <div id="services-list">
+        <div class="skeleton" style="height:60px;border-radius:var(--radius-md);margin-bottom:0.75rem"></div>
+        <div class="skeleton" style="height:60px;border-radius:var(--radius-md);margin-bottom:0.75rem"></div>
+        <div class="skeleton" style="height:60px;border-radius:var(--radius-md);margin-bottom:0.75rem"></div>
+        <div class="skeleton" style="height:60px;border-radius:var(--radius-md)"></div>
+      </div>
+    </div>
+
+    <!-- Estatísticas -->
+    <div class="card">
+      <h3 style="margin-bottom:1.5rem">📊 Estatísticas da Plataforma</h3>
+      <div class="grid grid-4" id="platform-stats">
+        <div class="skeleton" style="height:80px;border-radius:var(--radius-md)"></div>
+        <div class="skeleton" style="height:80px;border-radius:var(--radius-md)"></div>
+        <div class="skeleton" style="height:80px;border-radius:var(--radius-md)"></div>
+        <div class="skeleton" style="height:80px;border-radius:var(--radius-md)"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer class="footer">
+  <div class="container">
+    <div class="footer-bottom" style="border-top:none;padding-top:0">
+      <p>© 2024 SrBots. Todos os direitos reservados.</p>
+      <p><a href="/" style="color:var(--purple-light)">← Voltar ao Início</a></p>
+    </div>
+  </div>
+</footer>
+
+<script src="/assets/js/app.js"></script>
+<script>
+  const statusConfig = {
+    operational: { icon: '✅', text: 'Todos os sistemas operacionais', class: 'badge-green', dotClass: 'operational' },
+    degraded: { icon: '⚠️', text: 'Desempenho degradado', class: 'badge-yellow', dotClass: 'degraded' },
+    outage: { icon: '🔴', text: 'Interrupção detectada', class: 'badge-red', dotClass: 'outage' },
+  };
+
+  const serviceLabels = {
+    operational: { text: 'Operacional', class: 'badge-green' },
+    degraded: { text: 'Degradado', class: 'badge-yellow' },
+    outage: { text: 'Fora do Ar', class: 'badge-red' },
+  };
+
+  async function loadStatus() {
+    const res = await API.get('/status', false);
+    if (res.error || !res.data) {
+      document.getElementById('overall-status-text').textContent = 'Erro ao carregar status';
+      return;
+    }
+
+    const { overall, services, stats, updated_at } = res.data;
+    const cfg = statusConfig[overall] || statusConfig.operational;
+
+    document.getElementById('overall-status-icon').textContent = cfg.icon;
+    document.getElementById('overall-status-text').textContent = cfg.text;
+    document.getElementById('status-updated').textContent = `Atualizado em ${Utils.formatDate(updated_at)}`;
+
+    // Serviços
+    document.getElementById('services-list').innerHTML = services.map(s => {
+      const sl = serviceLabels[s.status] || serviceLabels.operational;
+      return `
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:1rem;background:var(--bg-input);border-radius:var(--radius-md);margin-bottom:0.75rem">
+          <div style="display:flex;align-items:center;gap:0.75rem">
+            <span class="status-dot ${s.status}"></span>
+            <div>
+              <div style="font-weight:600;font-size:0.9rem">${s.service_name}</div>
+              ${s.message ? `<div class="text-muted font-xs">${s.message}</div>` : ''}
+            </div>
+          </div>
+          <span class="badge ${sl.class}">${sl.text}</span>
+        </div>
+      `;
+    }).join('');
+
+    // Estatísticas
+    document.getElementById('platform-stats').innerHTML = `
+      <div style="text-align:center;padding:1rem;background:var(--bg-input);border-radius:var(--radius-md)">
+        <div style="font-size:1.75rem;font-weight:800;background:var(--gradient-primary);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">${stats.users.toLocaleString('pt-BR')}+</div>
+        <div class="text-muted font-xs mt-1">Usuários</div>
+      </div>
+      <div style="text-align:center;padding:1rem;background:var(--bg-input);border-radius:var(--radius-md)">
+        <div style="font-size:1.75rem;font-weight:800;background:var(--gradient-primary);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">${stats.products.toLocaleString('pt-BR')}</div>
+        <div class="text-muted font-xs mt-1">Produtos</div>
+      </div>
+      <div style="text-align:center;padding:1rem;background:var(--bg-input);border-radius:var(--radius-md)">
+        <div style="font-size:1.75rem;font-weight:800;background:var(--gradient-primary);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">${stats.orders.toLocaleString('pt-BR')}+</div>
+        <div class="text-muted font-xs mt-1">Pedidos</div>
+      </div>
+      <div style="text-align:center;padding:1rem;background:var(--bg-input);border-radius:var(--radius-md)">
+        <div style="font-size:1.75rem;font-weight:800;color:var(--green-light)">${stats.bots_online.toLocaleString('pt-BR')}</div>
+        <div class="text-muted font-xs mt-1">Bots Online</div>
+      </div>
+    `;
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    loadStatus();
+    // Atualizar a cada 60 segundos
+    setInterval(loadStatus, 60000);
+  });
+</script>
+</body>
+</html>

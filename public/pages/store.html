@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Loja — SrBots</title>
+  <link rel="icon" href="/assets/img/favicon.ico">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/assets/css/main.css">
+</head>
+<body>
+<nav class="navbar">
+  <div class="navbar-inner">
+    <a href="/" class="navbar-logo">
+      <div class="logo-icon">🤖</div>
+      <span class="gradient-text">SrBots</span>
+    </a>
+    <ul class="navbar-nav">
+      <li><a href="/">Início</a></li>
+      <li><a href="/loja" class="active">Loja</a></li>
+      <li><a href="/status">Status</a></li>
+    </ul>
+    <div class="navbar-actions">
+      <div id="navbar-auth"></div>
+    </div>
+  </div>
+</nav>
+
+<div style="padding-top:70px;min-height:100vh">
+  <!-- Header da Loja -->
+  <div style="background:var(--bg-secondary);border-bottom:1px solid var(--border);padding:2.5rem 0">
+    <div class="container">
+      <h1 style="margin-bottom:0.5rem">🛒 Loja</h1>
+      <p class="text-secondary">Explore nossos produtos e encontre o que você precisa</p>
+    </div>
+  </div>
+
+  <div class="container" style="padding-top:2rem;padding-bottom:4rem">
+    <!-- Filtros -->
+    <div style="display:flex;gap:1rem;align-items:center;flex-wrap:wrap;margin-bottom:2rem">
+      <!-- Busca -->
+      <div style="flex:1;min-width:240px;position:relative">
+        <span style="position:absolute;left:1rem;top:50%;transform:translateY(-50%);color:var(--text-muted)">🔍</span>
+        <input type="text" id="search-input" class="form-input" placeholder="Buscar produtos..." style="padding-left:2.75rem" oninput="handleSearch(this.value)">
+      </div>
+      <!-- Ordenação -->
+      <select id="sort-select" class="form-select" style="width:auto;min-width:180px" onchange="loadProducts()">
+        <option value="created_at-DESC">Mais Recentes</option>
+        <option value="sales_count-DESC">Mais Vendidos</option>
+        <option value="price-ASC">Menor Preço</option>
+        <option value="price-DESC">Maior Preço</option>
+        <option value="name-ASC">A-Z</option>
+      </select>
+      <!-- Total -->
+      <div class="text-secondary font-sm" id="results-count"></div>
+    </div>
+
+    <!-- Categorias -->
+    <div class="category-tabs" id="category-tabs">
+      <button class="category-tab active" onclick="selectCategory(null, this)" data-category="">
+        🏪 Todos
+      </button>
+    </div>
+
+    <!-- Grid de Produtos -->
+    <div class="grid grid-auto" id="products-grid">
+      <div class="skeleton" style="height:380px;border-radius:var(--radius-lg)"></div>
+      <div class="skeleton" style="height:380px;border-radius:var(--radius-lg)"></div>
+      <div class="skeleton" style="height:380px;border-radius:var(--radius-lg)"></div>
+      <div class="skeleton" style="height:380px;border-radius:var(--radius-lg)"></div>
+      <div class="skeleton" style="height:380px;border-radius:var(--radius-lg)"></div>
+      <div class="skeleton" style="height:380px;border-radius:var(--radius-lg)"></div>
+    </div>
+
+    <!-- Paginação -->
+    <div class="pagination" id="pagination"></div>
+  </div>
+</div>
+
+<footer class="footer">
+  <div class="container">
+    <div class="footer-bottom" style="border-top:none;padding-top:0">
+      <p>© 2024 SrBots. Todos os direitos reservados.</p>
+      <p><a href="/" style="color:var(--purple-light)">← Voltar ao Início</a></p>
+    </div>
+  </div>
+</footer>
+
+<script src="/assets/js/app.js"></script>
+<script>
+  let currentPage = 1;
+  let currentCategory = Utils.getParam('category') || '';
+  let currentSearch = Utils.getParam('search') || '';
+  let searchTimer;
+
+  async function loadCategories() {
+    const res = await API.get('/products/categories', false);
+    if (!res.data) return;
+    const tabs = document.getElementById('category-tabs');
+    res.data.forEach(c => {
+      const btn = document.createElement('button');
+      btn.className = 'category-tab' + (currentCategory === c.slug ? ' active' : '');
+      btn.dataset.category = c.slug;
+      btn.innerHTML = `${c.icon || '📦'} ${c.name} <span style="opacity:0.6;font-size:0.75rem">(${c.product_count})</span>`;
+      btn.onclick = () => selectCategory(c.slug, btn);
+      tabs.appendChild(btn);
+    });
+  }
+
+  function selectCategory(slug, btn) {
+    currentCategory = slug || '';
+    currentPage = 1;
+    document.querySelectorAll('.category-tab').forEach(t => t.classList.remove('active'));
+    btn.classList.add('active');
+    Utils.setParam('category', currentCategory);
+    loadProducts();
+  }
+
+  function handleSearch(value) {
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(() => {
+      currentSearch = value;
+      currentPage = 1;
+      Utils.setParam('search', value);
+      loadProducts();
+    }, 400);
+  }
+
+  async function loadProducts() {
+    const grid = document.getElementById('products-grid');
+    grid.innerHTML = Array(6).fill('<div class="skeleton" style="height:380px;border-radius:var(--radius-lg)"></div>').join('');
+
+    const sortVal = document.getElementById('sort-select').value;
+    const [sort, order] = sortVal.split('-');
+
+    const params = new URLSearchParams({
+      page: currentPage,
+      limit: 12,
+      sort,
+      order,
+    });
+    if (currentCategory) params.set('category', currentCategory);
+    if (currentSearch) params.set('search', currentSearch);
+
+    const res = await API.get(`/products?${params}`, false);
+
+    if (res.error || !res.data) {
+      grid.innerHTML = '<div class="text-center text-secondary" style="grid-column:1/-1;padding:3rem">Erro ao carregar produtos.</div>';
+      return;
+    }
+
+    const { items, pagination } = res.data;
+
+    document.getElementById('results-count').textContent = `${pagination.total} produto${pagination.total !== 1 ? 's' : ''} encontrado${pagination.total !== 1 ? 's' : ''}`;
+
+    if (items.length === 0) {
+      grid.innerHTML = `
+        <div style="grid-column:1/-1;text-align:center;padding:4rem 1rem">
+          <div style="font-size:4rem;margin-bottom:1rem">🔍</div>
+          <h3 style="margin-bottom:0.5rem">Nenhum produto encontrado</h3>
+          <p class="text-secondary">Tente outros filtros ou termos de busca</p>
+        </div>
+      `;
+      document.getElementById('pagination').innerHTML = '';
+      return;
+    }
+
+    grid.innerHTML = items.map(p => renderProductCard(p)).join('');
+    renderPagination(pagination);
+  }
+
+  function renderProductCard(p) {
+    const discount = p.original_price ? Math.round((1 - p.price / p.original_price) * 100) : 0;
+    const stockBadge = p.stock !== null && p.stock <= 5 && p.stock > 0
+      ? `<span class="product-card-badge badge-sale" style="left:auto;right:1rem">Últimas ${p.stock} unidades!</span>` : '';
+    const outOfStock = p.stock !== null && p.stock <= 0;
+
+    return `
+      <div class="product-card card-hover fade-in">
+        ${p.is_featured ? '<span class="product-card-badge badge-featured">⭐ Destaque</span>' : ''}
+        ${discount > 0 && !p.is_featured ? `<span class="product-card-badge badge-sale">-${discount}%</span>` : ''}
+        ${stockBadge}
+        ${p.thumbnail_url
+          ? `<img src="${p.thumbnail_url}" alt="${p.name}" class="product-card-img" loading="lazy">`
+          : `<div class="product-card-img-placeholder">${Utils.productTypeIcon(p.product_type)}</div>`
+        }
+        <div class="product-card-body">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.5rem">
+            <span class="product-card-category" style="color:${p.category_color || 'var(--purple-light)'}">${p.category_name || ''}</span>
+            <span class="badge badge-gray font-xs">${Utils.productTypeLabel(p.product_type)}</span>
+          </div>
+          <h3 class="product-card-title">${p.name}</h3>
+          <p class="product-card-desc">${p.short_description || Utils.truncate(p.description || '', 80)}</p>
+          <div style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-bottom:0.75rem">
+            ${p.sales_count > 0 ? `<span class="badge badge-purple font-xs">🛒 ${p.sales_count} vendas</span>` : ''}
+            ${p.version ? `<span class="badge badge-gray font-xs">v${p.version}</span>` : ''}
+          </div>
+          <div class="product-card-footer">
+            <div class="product-price">
+              <span class="product-price-current">${Utils.formatCurrency(p.price)}</span>
+              ${p.original_price ? `<span class="product-price-original">${Utils.formatCurrency(p.original_price)}</span>` : ''}
+            </div>
+            ${outOfStock
+              ? '<span class="badge badge-red">Esgotado</span>'
+              : `<a href="/produto?id=${p.id}" class="btn btn-primary btn-sm">Comprar</a>`
+            }
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  function renderPagination(pagination) {
+    const container = document.getElementById('pagination');
+    if (pagination.pages <= 1) { container.innerHTML = ''; return; }
+
+    let html = '';
+    html += `<button class="pagination-btn" onclick="goToPage(${pagination.page - 1})" ${pagination.page <= 1 ? 'disabled' : ''}>←</button>`;
+
+    for (let i = 1; i <= pagination.pages; i++) {
+      if (i === 1 || i === pagination.pages || Math.abs(i - pagination.page) <= 2) {
+        html += `<button class="pagination-btn ${i === pagination.page ? 'active' : ''}" onclick="goToPage(${i})">${i}</button>`;
+      } else if (Math.abs(i - pagination.page) === 3) {
+        html += `<span style="color:var(--text-muted);padding:0 0.25rem">...</span>`;
+      }
+    }
+
+    html += `<button class="pagination-btn" onclick="goToPage(${pagination.page + 1})" ${pagination.page >= pagination.pages ? 'disabled' : ''}>→</button>`;
+    container.innerHTML = html;
+  }
+
+  function goToPage(page) {
+    currentPage = page;
+    loadProducts();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    if (currentSearch) document.getElementById('search-input').value = currentSearch;
+    loadCategories();
+    loadProducts();
+  });
+</script>
+</body>
+</html>

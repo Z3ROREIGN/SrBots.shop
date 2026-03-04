@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Produto — SrBots</title>
+  <link rel="icon" href="/assets/img/favicon.ico">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/assets/css/main.css">
+</head>
+<body>
+<nav class="navbar">
+  <div class="navbar-inner">
+    <a href="/" class="navbar-logo"><div class="logo-icon">🤖</div><span class="gradient-text">SrBots</span></a>
+    <ul class="navbar-nav">
+      <li><a href="/">Início</a></li>
+      <li><a href="/loja" class="active">Loja</a></li>
+      <li><a href="/status">Status</a></li>
+    </ul>
+    <div class="navbar-actions"><div id="navbar-auth"></div></div>
+  </div>
+</nav>
+
+<div style="padding-top:70px;min-height:100vh">
+  <div class="container" style="padding-top:2rem;padding-bottom:4rem">
+    <!-- Breadcrumb -->
+    <div style="display:flex;align-items:center;gap:0.5rem;font-size:0.875rem;color:var(--text-muted);margin-bottom:2rem">
+      <a href="/" style="color:var(--text-muted)">Início</a>
+      <span>›</span>
+      <a href="/loja" style="color:var(--text-muted)">Loja</a>
+      <span>›</span>
+      <span id="breadcrumb-name" style="color:var(--text-secondary)">Produto</span>
+    </div>
+
+    <div id="product-loading" style="text-align:center;padding:4rem">
+      <div class="spinner spinner-lg" style="margin:0 auto 1rem"></div>
+      <p class="text-secondary">Carregando produto...</p>
+    </div>
+
+    <div id="product-content" style="display:none">
+      <div style="display:grid;grid-template-columns:1fr 380px;gap:3rem;align-items:start">
+        <!-- Coluna Esquerda -->
+        <div>
+          <!-- Imagem -->
+          <div id="product-image-container" style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-xl);overflow:hidden;margin-bottom:2rem">
+            <div id="product-img-placeholder" style="height:350px;display:flex;align-items:center;justify-content:center;font-size:6rem"></div>
+          </div>
+
+          <!-- Descrição -->
+          <div class="card" style="margin-bottom:1.5rem">
+            <h3 style="margin-bottom:1rem">📋 Descrição</h3>
+            <div id="product-description" class="text-secondary" style="line-height:1.8;white-space:pre-wrap"></div>
+          </div>
+
+          <!-- Requisitos -->
+          <div class="card" id="requirements-card" style="display:none;margin-bottom:1.5rem">
+            <h3 style="margin-bottom:1rem">⚙️ Requisitos</h3>
+            <div id="product-requirements" class="text-secondary" style="line-height:1.8"></div>
+          </div>
+
+          <!-- Avaliações -->
+          <div class="card" id="reviews-card">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem">
+              <h3>⭐ Avaliações</h3>
+              <div id="avg-rating" class="text-yellow"></div>
+            </div>
+            <div id="reviews-list"></div>
+          </div>
+        </div>
+
+        <!-- Coluna Direita - Compra -->
+        <div style="position:sticky;top:90px">
+          <div class="card" style="border-color:var(--purple);box-shadow:var(--shadow-glow)">
+            <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.5rem">
+              <span id="product-category-badge" class="badge badge-purple"></span>
+              <span id="product-type-badge" class="badge badge-gray"></span>
+            </div>
+            <h2 id="product-name" style="margin-bottom:1rem;line-height:1.3"></h2>
+
+            <div style="display:flex;align-items:baseline;gap:0.75rem;margin-bottom:1.5rem">
+              <span id="product-price" style="font-size:2.25rem;font-weight:800;background:var(--gradient-primary);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text"></span>
+              <span id="product-original-price" style="font-size:1rem;color:var(--text-muted);text-decoration:line-through;display:none"></span>
+              <span id="product-discount" class="badge badge-red" style="display:none"></span>
+            </div>
+
+            <!-- Features -->
+            <ul id="product-features" style="list-style:none;display:flex;flex-direction:column;gap:0.5rem;margin-bottom:1.5rem"></ul>
+
+            <!-- Estoque -->
+            <div id="stock-info" style="display:none;margin-bottom:1rem"></div>
+
+            <!-- Botão Comprar -->
+            <button id="buy-btn" class="btn btn-primary w-full btn-lg" onclick="openBuyModal()">
+              🛒 Comprar Agora
+            </button>
+
+            <div style="display:flex;align-items:center;gap:0.5rem;justify-content:center;margin-top:1rem;font-size:0.8rem;color:var(--text-muted)">
+              <span>🔒</span>
+              <span>Pagamento seguro via Pix • Entrega automática</span>
+            </div>
+
+            <!-- Info adicional -->
+            <div style="border-top:1px solid var(--border);margin-top:1.5rem;padding-top:1.5rem;display:flex;flex-direction:column;gap:0.75rem">
+              <div style="display:flex;justify-content:space-between;font-size:0.875rem">
+                <span class="text-muted">Versão</span>
+                <span id="product-version" class="font-mono"></span>
+              </div>
+              <div style="display:flex;justify-content:space-between;font-size:0.875rem">
+                <span class="text-muted">Entrega</span>
+                <span id="product-delivery"></span>
+              </div>
+              <div style="display:flex;justify-content:space-between;font-size:0.875rem">
+                <span class="text-muted">Vendas</span>
+                <span id="product-sales"></span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Modal de Compra ──────────────────────────────────────── -->
+<div class="modal-overlay" id="buy-modal">
+  <div class="modal" style="max-width:480px">
+    <div class="modal-header">
+      <h3>🛒 Finalizar Compra</h3>
+      <button class="modal-close" onclick="closeModal('buy-modal')">×</button>
+    </div>
+
+    <!-- Step 1: Dados do Pagador -->
+    <div id="step-payer">
+      <p class="text-secondary font-sm mb-3">Informe seus dados para gerar o Pix</p>
+      <div style="display:flex;flex-direction:column;gap:1rem">
+        <div class="form-group">
+          <label class="form-label">Nome Completo *</label>
+          <input type="text" id="payer-name" class="form-input" placeholder="Seu nome completo">
+        </div>
+        <div class="form-group">
+          <label class="form-label">CPF *</label>
+          <input type="text" id="payer-cpf" class="form-input" placeholder="000.000.000-00" maxlength="14" oninput="maskCPF(this)">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Cupom de Desconto (opcional)</label>
+          <input type="text" id="coupon-code" class="form-input" placeholder="CODIGO" style="text-transform:uppercase">
+        </div>
+        <div id="order-summary" style="background:var(--bg-input);border-radius:var(--radius-md);padding:1rem;font-size:0.875rem">
+          <div style="display:flex;justify-content:space-between;margin-bottom:0.5rem">
+            <span class="text-muted">Produto</span>
+            <span id="summary-product"></span>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-weight:700;font-size:1rem;border-top:1px solid var(--border);padding-top:0.5rem;margin-top:0.5rem">
+            <span>Total</span>
+            <span id="summary-price" class="gradient-text"></span>
+          </div>
+        </div>
+        <button class="btn btn-primary w-full btn-lg" onclick="createOrder()" id="create-order-btn">
+          Gerar Pix →
+        </button>
+      </div>
+    </div>
+
+    <!-- Step 2: Pagamento Pix -->
+    <div id="step-pix" style="display:none">
+      <div class="pix-container" style="background:transparent;border:none;padding:0">
+        <div style="background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.3);border-radius:var(--radius-md);padding:0.75rem;text-align:center;margin-bottom:1rem">
+          <span style="color:var(--green-light);font-size:0.875rem;font-weight:600">✓ Pix gerado com sucesso! Pague para confirmar seu pedido</span>
+        </div>
+
+        <div class="pix-qr-wrapper">
+          <img id="pix-qr-img" src="" alt="QR Code Pix" style="width:200px;height:200px">
+        </div>
+
+        <p class="text-secondary font-sm mt-2 mb-1">Ou copie o código Pix:</p>
+        <div class="pix-copy-field">
+          <input type="text" id="pix-code" class="pix-copy-input" readonly>
+          <button class="btn btn-primary btn-sm" onclick="copyPix()">📋 Copiar</button>
+        </div>
+
+        <div class="pix-timer" id="pix-timer">
+          <span>⏱</span>
+          <span id="timer-text">Expira em <strong id="timer-countdown">30:00</strong></span>
+        </div>
+
+        <div class="pix-status-checking">
+          <div class="spinner"></div>
+          <span id="pix-status-text">Aguardando confirmação do pagamento...</span>
+        </div>
+
+        <div id="pix-paid" style="display:none;text-align:center;padding:1rem">
+          <div style="font-size:3rem;margin-bottom:0.5rem">🎉</div>
+          <h3 style="color:var(--green-light);margin-bottom:0.5rem">Pagamento Confirmado!</h3>
+          <p class="text-secondary font-sm mb-3">Seu produto está disponível no Dashboard</p>
+          <a href="/dashboard#purchases" class="btn btn-success w-full">Ver Minha Compra</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="/assets/js/app.js"></script>
+<script>
+  let productData = null;
+  let orderId = null;
+  let checkInterval = null;
+  let timerInterval = null;
+
+  async function loadProduct() {
+    const id = Utils.getParam('id');
+    if (!id) { window.location.href = '/loja'; return; }
+
+    const res = await API.get(`/products/${id}`, false);
+    if (res.error || !res.data) {
+      document.getElementById('product-loading').innerHTML = '<p class="text-secondary">Produto não encontrado.</p>';
+      return;
+    }
+
+    productData = res.data;
+    renderProduct(productData);
+  }
+
+  function renderProduct(p) {
+    document.title = `${p.name} — SrBots`;
+    document.getElementById('breadcrumb-name').textContent = p.name;
+    document.getElementById('product-loading').style.display = 'none';
+    document.getElementById('product-content').style.display = 'block';
+
+    // Imagem
+    const imgContainer = document.getElementById('product-img-placeholder');
+    if (p.thumbnail_url) {
+      imgContainer.innerHTML = `<img src="${p.thumbnail_url}" alt="${p.name}" style="width:100%;height:350px;object-fit:cover">`;
+    } else {
+      imgContainer.textContent = Utils.productTypeIcon(p.product_type);
+    }
+
+    // Badges
+    document.getElementById('product-category-badge').textContent = p.category_name || '';
+    document.getElementById('product-type-badge').textContent = Utils.productTypeLabel(p.product_type);
+
+    // Info
+    document.getElementById('product-name').textContent = p.name;
+    document.getElementById('product-price').textContent = Utils.formatCurrency(p.price);
+    document.getElementById('product-version').textContent = p.version || '1.0.0';
+    document.getElementById('product-sales').textContent = `${p.sales_count || 0} vendas`;
+    document.getElementById('product-delivery').textContent = p.delivery_type === 'automatic' ? '⚡ Automática' : '📋 Manual';
+
+    if (p.original_price) {
+      const el = document.getElementById('product-original-price');
+      el.textContent = Utils.formatCurrency(p.original_price);
+      el.style.display = 'inline';
+      const disc = Math.round((1 - p.price / p.original_price) * 100);
+      const discEl = document.getElementById('product-discount');
+      discEl.textContent = `-${disc}%`;
+      discEl.style.display = 'inline-flex';
+    }
+
+    // Descrição
+    document.getElementById('product-description').textContent = p.description || 'Sem descrição disponível.';
+
+    // Requisitos
+    if (p.requirements) {
+      document.getElementById('requirements-card').style.display = 'block';
+      document.getElementById('product-requirements').textContent = p.requirements;
+    }
+
+    // Features
+    const features = p.features || [];
+    const featuresList = document.getElementById('product-features');
+    featuresList.innerHTML = features.map(f => `
+      <li style="display:flex;align-items:center;gap:0.5rem;font-size:0.875rem">
+        <span style="color:var(--green-light)">✓</span>
+        <span class="text-secondary">${f}</span>
+      </li>
+    `).join('');
+
+    // Estoque
+    if (p.stock !== null) {
+      const stockEl = document.getElementById('stock-info');
+      stockEl.style.display = 'block';
+      if (p.stock <= 0) {
+        stockEl.innerHTML = '<span class="badge badge-red">Produto esgotado</span>';
+        document.getElementById('buy-btn').disabled = true;
+        document.getElementById('buy-btn').textContent = 'Esgotado';
+      } else if (p.stock <= 5) {
+        stockEl.innerHTML = `<span class="badge badge-yellow">⚠ Apenas ${p.stock} em estoque!</span>`;
+      }
+    }
+
+    // Avaliações
+    renderReviews(p.reviews || [], p.avg_rating || 0);
+
+    // Summary no modal
+    document.getElementById('summary-product').textContent = p.name;
+    document.getElementById('summary-price').textContent = Utils.formatCurrency(p.price);
+  }
+
+  function renderReviews(reviews, avgRating) {
+    const avgEl = document.getElementById('avg-rating');
+    if (reviews.length > 0) {
+      avgEl.innerHTML = `<span style="font-size:1.25rem">${Utils.stars(avgRating)}</span> <span style="font-weight:700">${avgRating.toFixed(1)}</span> <span class="text-muted">(${reviews.length})</span>`;
+    }
+
+    const list = document.getElementById('reviews-list');
+    if (reviews.length === 0) {
+      list.innerHTML = '<p class="text-muted font-sm">Nenhuma avaliação ainda.</p>';
+      return;
+    }
+
+    list.innerHTML = reviews.map(r => `
+      <div style="border-top:1px solid var(--border);padding:1rem 0">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.5rem">
+          <div style="display:flex;align-items:center;gap:0.5rem">
+            <span style="font-weight:600;font-size:0.875rem">${r.username}</span>
+            <span style="color:var(--yellow);font-size:0.875rem">${'★'.repeat(r.rating)}${'☆'.repeat(5-r.rating)}</span>
+          </div>
+          <span class="text-muted font-xs">${Utils.formatDateShort(r.created_at)}</span>
+        </div>
+        ${r.comment ? `<p class="text-secondary font-sm">${r.comment}</p>` : ''}
+      </div>
+    `).join('');
+  }
+
+  function openBuyModal() {
+    if (!Auth.isLoggedIn()) {
+      window.location.href = `/login?redirect=${encodeURIComponent(window.location.href)}`;
+      return;
+    }
+    openModal('buy-modal');
+  }
+
+  function maskCPF(input) {
+    let v = input.value.replace(/\D/g, '');
+    if (v.length > 11) v = v.slice(0, 11);
+    v = v.replace(/(\d{3})(\d)/, '$1.$2');
+    v = v.replace(/(\d{3})(\d)/, '$1.$2');
+    v = v.replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+    input.value = v;
+  }
+
+  async function createOrder() {
+    const name = document.getElementById('payer-name').value.trim();
+    const cpf = document.getElementById('payer-cpf').value.replace(/\D/g, '');
+    const coupon = document.getElementById('coupon-code').value.trim();
+
+    if (!name) { Toast.error('Informe seu nome'); return; }
+    if (cpf.length !== 11) { Toast.error('CPF inválido'); return; }
+
+    const btn = document.getElementById('create-order-btn');
+    btn.disabled = true;
+    btn.innerHTML = '<div class="spinner" style="width:18px;height:18px;border-width:2px"></div> Gerando Pix...';
+
+    const payload = {
+      product_id: productData.id,
+      payer_name: name,
+      payer_document: cpf,
+    };
+    if (coupon) payload.coupon_code = coupon;
+
+    const res = await API.post('/orders', payload);
+
+    btn.disabled = false;
+    btn.innerHTML = 'Gerar Pix →';
+
+    if (res.error) {
+      Toast.error(res.error);
+      return;
+    }
+
+    orderId = res.data.order_id;
+    showPixPayment(res.data);
+  }
+
+  function showPixPayment(data) {
+    document.getElementById('step-payer').style.display = 'none';
+    document.getElementById('step-pix').style.display = 'block';
+
+    // QR Code
+    if (data.payment.qr_code_base64) {
+      document.getElementById('pix-qr-img').src = data.payment.qr_code_base64;
+    } else if (data.payment.qr_code_url) {
+      document.getElementById('pix-qr-img').src = data.payment.qr_code_url;
+    }
+
+    // Código copia e cola
+    document.getElementById('pix-code').value = data.payment.copy_paste || '';
+
+    // Timer
+    startTimer(data.expires_at);
+
+    // Verificação automática
+    startPaymentCheck();
+  }
+
+  function copyPix() {
+    const code = document.getElementById('pix-code').value;
+    Utils.copyToClipboard(code);
+  }
+
+  function startTimer(expiresAt) {
+    const expiry = new Date(expiresAt).getTime();
+    timerInterval = setInterval(() => {
+      const remaining = expiry - Date.now();
+      if (remaining <= 0) {
+        clearInterval(timerInterval);
+        document.getElementById('timer-text').textContent = 'Pix expirado';
+        document.getElementById('pix-status-text').textContent = 'Pagamento expirado. Feche e tente novamente.';
+        stopPaymentCheck();
+        return;
+      }
+      const mins = Math.floor(remaining / 60000);
+      const secs = Math.floor((remaining % 60000) / 1000);
+      document.getElementById('timer-countdown').textContent = `${String(mins).padStart(2,'0')}:${String(secs).padStart(2,'0')}`;
+    }, 1000);
+  }
+
+  function startPaymentCheck() {
+    checkInterval = setInterval(async () => {
+      if (!orderId) return;
+      const res = await API.post(`/payments/check/${orderId}`);
+      if (res.data?.status === 'paid') {
+        stopPaymentCheck();
+        showPaymentSuccess();
+      } else if (res.data?.status === 'expired' || res.data?.status === 'cancelled') {
+        stopPaymentCheck();
+        document.getElementById('pix-status-text').textContent = 'Pagamento expirado ou cancelado.';
+      }
+    }, 5000);
+  }
+
+  function stopPaymentCheck() {
+    if (checkInterval) { clearInterval(checkInterval); checkInterval = null; }
+    if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+  }
+
+  function showPaymentSuccess() {
+    document.querySelector('.pix-status-checking').style.display = 'none';
+    document.getElementById('pix-timer').style.display = 'none';
+    document.getElementById('pix-paid').style.display = 'block';
+    Toast.success('Pagamento confirmado! 🎉');
+  }
+
+  document.addEventListener('DOMContentLoaded', loadProduct);
+</script>
+</body>
+</html>

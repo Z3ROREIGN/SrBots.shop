@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Entrar — SrBots</title>
+  <link rel="icon" href="/assets/img/favicon.ico">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/assets/css/main.css">
+</head>
+<body style="background:var(--bg-primary);display:flex;flex-direction:column;min-height:100vh;align-items:center;justify-content:center;padding:1rem">
+
+<div style="width:100%;max-width:420px">
+  <!-- Logo -->
+  <div style="text-align:center;margin-bottom:2rem">
+    <a href="/" style="display:inline-flex;align-items:center;gap:0.75rem;font-size:1.5rem;font-weight:800">
+      <div style="width:44px;height:44px;background:var(--gradient-primary);border-radius:var(--radius-md);display:flex;align-items:center;justify-content:center;font-size:1.25rem;box-shadow:var(--shadow-glow)">🤖</div>
+      <span class="gradient-text">SrBots</span>
+    </a>
+    <p class="text-secondary mt-2">Entre na sua conta</p>
+  </div>
+
+  <!-- Card -->
+  <div class="card" style="padding:2rem">
+    <div id="error-msg" class="alert alert-error mb-3" style="display:none"></div>
+
+    <form id="login-form" onsubmit="handleLogin(event)">
+      <div style="display:flex;flex-direction:column;gap:1.25rem">
+        <div class="form-group">
+          <label class="form-label">Email</label>
+          <input type="email" id="email" class="form-input" placeholder="seu@email.com" required autocomplete="email">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Senha</label>
+          <div style="position:relative">
+            <input type="password" id="password" class="form-input" placeholder="Sua senha" required autocomplete="current-password">
+            <button type="button" onclick="togglePassword('password')" style="position:absolute;right:1rem;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:1.1rem">👁</button>
+          </div>
+        </div>
+        <button type="submit" class="btn btn-primary w-full btn-lg" id="login-btn">
+          Entrar
+        </button>
+      </div>
+    </form>
+
+    <div style="text-align:center;margin-top:1.5rem;padding-top:1.5rem;border-top:1px solid var(--border)">
+      <p class="text-secondary font-sm">Não tem conta? <a href="/registro" style="color:var(--purple-light);font-weight:600">Criar conta grátis</a></p>
+    </div>
+  </div>
+
+  <div style="text-align:center;margin-top:1.5rem">
+    <a href="/" class="text-muted font-sm">← Voltar ao início</a>
+  </div>
+</div>
+
+<script src="/assets/js/app.js"></script>
+<script>
+  // Redirecionar se já logado
+  if (Auth.isLoggedIn()) {
+    window.location.href = Utils.getParam('redirect') || '/dashboard';
+  }
+
+  function togglePassword(id) {
+    const input = document.getElementById(id);
+    input.type = input.type === 'password' ? 'text' : 'password';
+  }
+
+  async function handleLogin(e) {
+    e.preventDefault();
+    const email = document.getElementById('email').value;
+    const password = document.getElementById('password').value;
+    const btn = document.getElementById('login-btn');
+    const errEl = document.getElementById('error-msg');
+
+    btn.disabled = true;
+    btn.innerHTML = '<div class="spinner" style="width:18px;height:18px;border-width:2px"></div> Entrando...';
+    errEl.style.display = 'none';
+
+    const res = await API.post('/auth/login', { email, password }, false);
+
+    btn.disabled = false;
+    btn.innerHTML = 'Entrar';
+
+    if (res.error) {
+      errEl.textContent = res.error;
+      errEl.style.display = 'flex';
+      return;
+    }
+
+    Auth.setAuth(res.data.token, res.data.user);
+    Toast.success('Bem-vindo de volta, ' + res.data.user.username + '!');
+
+    const redirect = Utils.getParam('redirect');
+    setTimeout(() => {
+      window.location.href = redirect || (res.data.user.role === 'admin' ? '/admin' : '/dashboard');
+    }, 800);
+  }
+</script>
+</body>
+</html>

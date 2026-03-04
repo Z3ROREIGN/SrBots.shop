@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard — SrBots</title>
+  <link rel="icon" href="/assets/img/favicon.ico">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/assets/css/main.css">
+</head>
+<body>
+<nav class="navbar">
+  <div class="navbar-inner">
+    <a href="/" class="navbar-logo"><div class="logo-icon">🤖</div><span class="gradient-text">SrBots</span></a>
+    <ul class="navbar-nav">
+      <li><a href="/">Início</a></li>
+      <li><a href="/loja">Loja</a></li>
+      <li><a href="/status">Status</a></li>
+    </ul>
+    <div class="navbar-actions"><div id="navbar-auth"></div></div>
+  </div>
+</nav>
+
+<div class="dashboard-layout">
+  <!-- Sidebar -->
+  <aside class="dashboard-sidebar">
+    <div style="margin-bottom:2rem">
+      <div style="display:flex;align-items:center;gap:0.75rem;padding:1rem;background:var(--bg-card);border-radius:var(--radius-md);border:1px solid var(--border)">
+        <div style="width:42px;height:42px;background:var(--gradient-primary);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.1rem;font-weight:800" id="user-avatar-nav">?</div>
+        <div>
+          <div style="font-weight:700;font-size:0.9rem" id="user-name-nav">—</div>
+          <div class="text-muted font-xs" id="user-email-nav">—</div>
+        </div>
+      </div>
+    </div>
+
+    <nav class="dashboard-nav">
+      <button class="dashboard-nav-item active" onclick="showTab('overview')" id="tab-overview">
+        <span class="icon">📊</span> Visão Geral
+      </button>
+      <button class="dashboard-nav-item" onclick="showTab('purchases')" id="tab-purchases">
+        <span class="icon">🛒</span> Minhas Compras
+      </button>
+      <button class="dashboard-nav-item" onclick="showTab('orders')" id="tab-orders">
+        <span class="icon">📋</span> Pedidos
+      </button>
+      <button class="dashboard-nav-item" onclick="showTab('bots')" id="tab-bots">
+        <span class="icon">🤖</span> Meus Bots
+      </button>
+      <button class="dashboard-nav-item" onclick="showTab('profile')" id="tab-profile">
+        <span class="icon">👤</span> Perfil
+      </button>
+      <div style="border-top:1px solid var(--border);margin:1rem 0"></div>
+      <a href="/loja" class="dashboard-nav-item" style="text-decoration:none">
+        <span class="icon">🏪</span> Ir para a Loja
+      </a>
+      <button class="dashboard-nav-item" onclick="handleLogout()" style="color:var(--red-light)">
+        <span class="icon">🚪</span> Sair
+      </button>
+    </nav>
+  </aside>
+
+  <!-- Content -->
+  <main class="dashboard-content">
+    <!-- Overview -->
+    <div id="content-overview">
+      <h2 style="margin-bottom:1.5rem">Visão Geral</h2>
+      <div class="grid grid-4" style="margin-bottom:2rem" id="stats-grid">
+        <div class="skeleton" style="height:100px;border-radius:var(--radius-lg)"></div>
+        <div class="skeleton" style="height:100px;border-radius:var(--radius-lg)"></div>
+        <div class="skeleton" style="height:100px;border-radius:var(--radius-lg)"></div>
+        <div class="skeleton" style="height:100px;border-radius:var(--radius-lg)"></div>
+      </div>
+
+      <div class="card">
+        <h3 style="margin-bottom:1rem">🚀 Acesso Rápido</h3>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:1rem">
+          <a href="/loja" class="card card-hover" style="padding:1.25rem;text-decoration:none;display:flex;align-items:center;gap:0.75rem">
+            <span style="font-size:1.5rem">🛒</span>
+            <div><div style="font-weight:600;font-size:0.9rem">Ver Loja</div><div class="text-muted font-xs">Explorar produtos</div></div>
+          </a>
+          <button onclick="showTab('purchases')" class="card card-hover" style="padding:1.25rem;text-align:left;border:1px solid var(--border);display:flex;align-items:center;gap:0.75rem;background:var(--bg-card)">
+            <span style="font-size:1.5rem">📦</span>
+            <div><div style="font-weight:600;font-size:0.9rem">Minhas Compras</div><div class="text-muted font-xs">Ver downloads</div></div>
+          </button>
+          <button onclick="showTab('bots')" class="card card-hover" style="padding:1.25rem;text-align:left;border:1px solid var(--border);display:flex;align-items:center;gap:0.75rem;background:var(--bg-card)">
+            <span style="font-size:1.5rem">🤖</span>
+            <div><div style="font-weight:600;font-size:0.9rem">Meus Bots</div><div class="text-muted font-xs">Gerenciar bots</div></div>
+          </button>
+          <a href="https://discord.gg/srbots" target="_blank" class="card card-hover" style="padding:1.25rem;text-decoration:none;display:flex;align-items:center;gap:0.75rem">
+            <span style="font-size:1.5rem">💬</span>
+            <div><div style="font-weight:600;font-size:0.9rem">Suporte</div><div class="text-muted font-xs">Discord</div></div>
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Purchases -->
+    <div id="content-purchases" style="display:none">
+      <h2 style="margin-bottom:1.5rem">Minhas Compras</h2>
+      <div id="purchases-list">
+        <div class="skeleton" style="height:100px;border-radius:var(--radius-lg);margin-bottom:1rem"></div>
+        <div class="skeleton" style="height:100px;border-radius:var(--radius-lg);margin-bottom:1rem"></div>
+      </div>
+    </div>
+
+    <!-- Orders -->
+    <div id="content-orders" style="display:none">
+      <h2 style="margin-bottom:1.5rem">Meus Pedidos</h2>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Pedido</th>
+              <th>Produto</th>
+              <th>Valor</th>
+              <th>Status</th>
+              <th>Data</th>
+            </tr>
+          </thead>
+          <tbody id="orders-table-body">
+            <tr><td colspan="5" style="text-align:center;padding:2rem;color:var(--text-muted)">Carregando...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Bots -->
+    <div id="content-bots" style="display:none">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem">
+        <h2>Meus Bots</h2>
+        <button class="btn btn-primary btn-sm" onclick="openModal('add-bot-modal')">+ Adicionar Bot</button>
+      </div>
+      <div id="bots-list"></div>
+    </div>
+
+    <!-- Profile -->
+    <div id="content-profile" style="display:none">
+      <h2 style="margin-bottom:1.5rem">Meu Perfil</h2>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:2rem;align-items:start">
+        <div class="card">
+          <h3 style="margin-bottom:1.5rem">Informações</h3>
+          <div style="display:flex;flex-direction:column;gap:1rem">
+            <div class="form-group">
+              <label class="form-label">Username</label>
+              <input type="text" id="profile-username" class="form-input">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Email</label>
+              <input type="email" id="profile-email" class="form-input" disabled style="opacity:0.6">
+            </div>
+            <button class="btn btn-primary" onclick="saveProfile()">Salvar Alterações</button>
+          </div>
+        </div>
+        <div class="card">
+          <h3 style="margin-bottom:1.5rem">Alterar Senha</h3>
+          <div style="display:flex;flex-direction:column;gap:1rem">
+            <div class="form-group">
+              <label class="form-label">Senha Atual</label>
+              <input type="password" id="current-password" class="form-input" placeholder="••••••">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Nova Senha</label>
+              <input type="password" id="new-password" class="form-input" placeholder="••••••">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Confirmar Nova Senha</label>
+              <input type="password" id="confirm-new-password" class="form-input" placeholder="••••••">
+            </div>
+            <button class="btn btn-secondary" onclick="changePassword()">Alterar Senha</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- Modal Adicionar Bot -->
+<div class="modal-overlay" id="add-bot-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>🤖 Adicionar Bot</h3>
+      <button class="modal-close" onclick="closeModal('add-bot-modal')">×</button>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:1rem">
+      <div class="form-group">
+        <label class="form-label">Nome do Bot *</label>
+        <input type="text" id="bot-name" class="form-input" placeholder="Meu Bot">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Token do Bot</label>
+        <input type="text" id="bot-token" class="form-input" placeholder="Token do Discord (opcional)">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Tipo</label>
+        <select id="bot-type" class="form-select">
+          <option value="discord">Discord</option>
+          <option value="telegram">Telegram</option>
+          <option value="whatsapp">WhatsApp</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Nome do Servidor</label>
+        <input type="text" id="bot-server" class="form-input" placeholder="Nome do servidor (opcional)">
+      </div>
+      <button class="btn btn-primary w-full" onclick="addBot()">Adicionar Bot</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Delivery -->
+<div class="modal-overlay" id="delivery-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>📦 Conteúdo do Produto</h3>
+      <button class="modal-close" onclick="closeModal('delivery-modal')">×</button>
+    </div>
+    <div id="delivery-content"></div>
+  </div>
+</div>
+
+<script src="/assets/js/app.js"></script>
+<script>
+  if (!Auth.requireAuth()) { /* redirect handled */ }
+
+  const user = Auth.getUser();
+
+  function showTab(tab) {
+    document.querySelectorAll('[id^="content-"]').forEach(el => el.style.display = 'none');
+    document.querySelectorAll('.dashboard-nav-item').forEach(el => el.classList.remove('active'));
+    document.getElementById(`content-${tab}`).style.display = 'block';
+    const tabBtn = document.getElementById(`tab-${tab}`);
+    if (tabBtn) tabBtn.classList.add('active');
+
+    // Carregar dados da aba
+    if (tab === 'overview') loadOverview();
+    else if (tab === 'purchases') loadPurchases();
+    else if (tab === 'orders') loadOrders();
+    else if (tab === 'bots') loadBots();
+    else if (tab === 'profile') loadProfile();
+  }
+
+  async function loadOverview() {
+    const res = await API.get('/user/dashboard');
+    if (res.error) return;
+    const { bots, purchases, pending_orders } = res.data;
+
+    document.getElementById('stats-grid').innerHTML = `
+      <div class="stat-card">
+        <div class="stat-card-icon purple">🛒</div>
+        <div><div class="stat-card-value">${purchases}</div><div class="stat-card-label">Compras</div></div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card-icon green">🤖</div>
+        <div><div class="stat-card-value">${bots.total}/${bots.limit}</div><div class="stat-card-label">Bots (limite)</div></div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card-icon cyan">🟢</div>
+        <div><div class="stat-card-value">${bots.online}</div><div class="stat-card-label">Bots Online</div></div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card-icon yellow">⏳</div>
+        <div><div class="stat-card-value">${pending_orders}</div><div class="stat-card-label">Pedidos Pendentes</div></div>
+      </div>
+    `;
+  }
+
+  async function loadPurchases() {
+    const res = await API.get('/user/purchases');
+    const container = document.getElementById('purchases-list');
+    if (res.error || !res.data?.length) {
+      container.innerHTML = `
+        <div style="text-align:center;padding:4rem;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg)">
+          <div style="font-size:3rem;margin-bottom:1rem">📦</div>
+          <h3 style="margin-bottom:0.5rem">Nenhuma compra ainda</h3>
+          <p class="text-secondary mb-3">Explore nossa loja e adquira seus primeiros produtos</p>
+          <a href="/loja" class="btn btn-primary">Ver Loja</a>
+        </div>
+      `;
+      return;
+    }
+
+    container.innerHTML = res.data.map(p => `
+      <div class="card" style="display:flex;align-items:center;gap:1.5rem;margin-bottom:1rem;flex-wrap:wrap">
+        <div style="font-size:2.5rem">${Utils.productTypeIcon(p.product_type)}</div>
+        <div style="flex:1;min-width:200px">
+          <div style="font-weight:700;margin-bottom:0.25rem">${p.product_name}</div>
+          <div style="display:flex;gap:0.5rem;flex-wrap:wrap">
+            <span class="badge badge-gray font-xs">${Utils.productTypeLabel(p.product_type)}</span>
+            ${p.version ? `<span class="badge badge-purple font-xs">v${p.version}</span>` : ''}
+          </div>
+          <div class="text-muted font-xs mt-1">Comprado em ${Utils.formatDateShort(p.paid_at)}</div>
+        </div>
+        <div style="display:flex;gap:0.75rem;align-items:center">
+          <span style="font-weight:700;color:var(--green-light)">${Utils.formatCurrency(p.total_price)}</span>
+          ${p.delivery_data
+            ? `<button class="btn btn-primary btn-sm" onclick='showDelivery(${JSON.stringify(p.delivery_data).replace(/'/g, "&#39;")}, "${p.product_name}")'>📥 Acessar</button>`
+            : `<span class="badge badge-yellow">Entrega Manual</span>`
+          }
+        </div>
+      </div>
+    `).join('');
+  }
+
+  async function loadOrders() {
+    const res = await API.get('/orders');
+    const tbody = document.getElementById('orders-table-body');
+    if (res.error || !res.data?.length) {
+      tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:2rem;color:var(--text-muted)">Nenhum pedido encontrado</td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = res.data.map(o => {
+      const s = Utils.statusLabel(o.status);
+      return `
+        <tr>
+          <td><span class="font-mono font-xs">${o.order_number}</span></td>
+          <td>${o.product_name}</td>
+          <td style="font-weight:600">${Utils.formatCurrency(o.total_price)}</td>
+          <td><span class="badge ${s.class}">${s.text}</span></td>
+          <td class="text-muted font-xs">${Utils.formatDateShort(o.created_at)}</td>
+        </tr>
+      `;
+    }).join('');
+  }
+
+  async function loadBots() {
+    const res = await API.get('/bots');
+    const container = document.getElementById('bots-list');
+    if (res.error || !res.data?.length) {
+      container.innerHTML = `
+        <div style="text-align:center;padding:4rem;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg)">
+          <div style="font-size:3rem;margin-bottom:1rem">🤖</div>
+          <h3 style="margin-bottom:0.5rem">Nenhum bot registrado</h3>
+          <p class="text-secondary mb-3">Adicione seu primeiro bot para monitorá-lo</p>
+          <button class="btn btn-primary" onclick="openModal('add-bot-modal')">Adicionar Bot</button>
+        </div>
+      `;
+      return;
+    }
+
+    container.innerHTML = res.data.map(b => {
+      const s = Utils.botStatusLabel(b.status);
+      return `
+        <div class="card" style="display:flex;align-items:center;gap:1.5rem;margin-bottom:1rem;flex-wrap:wrap">
+          <div style="font-size:2rem">🤖</div>
+          <div style="flex:1;min-width:200px">
+            <div style="font-weight:700;margin-bottom:0.25rem">${b.bot_name}</div>
+            <div style="display:flex;gap:0.5rem;flex-wrap:wrap">
+              <span class="badge ${s.class}">${s.text}</span>
+              <span class="badge badge-gray font-xs">${b.bot_type}</span>
+              ${b.server_name ? `<span class="badge badge-blue font-xs">${b.server_name}</span>` : ''}
+            </div>
+            <div class="text-muted font-xs mt-1">Adicionado em ${Utils.formatDateShort(b.created_at)}</div>
+          </div>
+          <button class="btn btn-danger btn-sm" onclick="deleteBot(${b.id}, '${b.bot_name}')">Remover</button>
+        </div>
+      `;
+    }).join('');
+  }
+
+  async function loadProfile() {
+    const res = await API.get('/user/profile');
+    if (res.error) return;
+    document.getElementById('profile-username').value = res.data.username;
+    document.getElementById('profile-email').value = res.data.email;
+  }
+
+  async function addBot() {
+    const name = document.getElementById('bot-name').value.trim();
+    if (!name) { Toast.error('Nome do bot é obrigatório'); return; }
+
+    const res = await API.post('/bots', {
+      bot_name: name,
+      bot_token: document.getElementById('bot-token').value.trim() || null,
+      bot_type: document.getElementById('bot-type').value,
+      server_name: document.getElementById('bot-server').value.trim() || null,
+    });
+
+    if (res.error) { Toast.error(res.error); return; }
+    Toast.success('Bot adicionado com sucesso!');
+    closeModal('add-bot-modal');
+    loadBots();
+  }
+
+  async function deleteBot(id, name) {
+    if (!confirm(`Remover o bot "${name}"?`)) return;
+    const res = await API.delete(`/bots/${id}`);
+    if (res.error) { Toast.error(res.error); return; }
+    Toast.success('Bot removido!');
+    loadBots();
+  }
+
+  async function saveProfile() {
+    const username = document.getElementById('profile-username').value.trim();
+    const res = await API.put('/user/profile', { username });
+    if (res.error) { Toast.error(res.error); return; }
+    Toast.success('Perfil atualizado!');
+    const userData = Auth.getUser();
+    if (userData) { userData.username = username; Auth.setAuth(Auth.getToken(), userData); }
+  }
+
+  async function changePassword() {
+    const current = document.getElementById('current-password').value;
+    const newPass = document.getElementById('new-password').value;
+    const confirm = document.getElementById('confirm-new-password').value;
+    if (newPass !== confirm) { Toast.error('Senhas não coincidem'); return; }
+    if (newPass.length < 6) { Toast.error('Senha deve ter pelo menos 6 caracteres'); return; }
+    const res = await API.put('/user/password', { current_password: current, new_password: newPass });
+    if (res.error) { Toast.error(res.error); return; }
+    Toast.success('Senha alterada! Faça login novamente.');
+    setTimeout(() => { Auth.logout(); window.location.href = '/login'; }, 2000);
+  }
+
+  function showDelivery(data, productName) {
+    const container = document.getElementById('delivery-content');
+    let html = '';
+
+    if (typeof data === 'object') {
+      if (data.download_url) {
+        html += `<div class="form-group mb-3"><label class="form-label">Link de Download</label><div style="display:flex;gap:0.5rem"><input type="text" class="form-input" value="${data.download_url}" readonly><button class="btn btn-primary btn-sm" onclick="Utils.copyToClipboard('${data.download_url}')">Copiar</button></div></div>`;
+      }
+      if (data.license_key) {
+        html += `<div class="form-group mb-3"><label class="form-label">Chave de Licença</label><div style="display:flex;gap:0.5rem"><input type="text" class="form-input font-mono" value="${data.license_key}" readonly><button class="btn btn-primary btn-sm" onclick="Utils.copyToClipboard('${data.license_key}')">Copiar</button></div></div>`;
+      }
+      if (data.instructions) {
+        html += `<div class="form-group"><label class="form-label">Instruções</label><div class="card" style="white-space:pre-wrap;font-size:0.875rem;color:var(--text-secondary)">${data.instructions}</div></div>`;
+      }
+      if (data.content) {
+        html += `<div class="form-group"><label class="form-label">Conteúdo</label><textarea class="form-textarea font-mono" readonly style="min-height:200px">${data.content}</textarea></div>`;
+      }
+    } else {
+      html = `<pre style="white-space:pre-wrap;font-size:0.875rem;color:var(--text-secondary);background:var(--bg-input);padding:1rem;border-radius:var(--radius-md)">${JSON.stringify(data, null, 2)}</pre>`;
+    }
+
+    container.innerHTML = html || '<p class="text-muted">Conteúdo não disponível. Entre em contato com o suporte.</p>';
+    openModal('delivery-modal');
+  }
+
+  // Verificar hash na URL para tab
+  const hash = window.location.hash.replace('#', '');
+  const validTabs = ['overview', 'purchases', 'orders', 'bots', 'profile'];
+
+  // Atualizar navbar
+  if (user) {
+    document.addEventListener('DOMContentLoaded', () => {
+      const navEl = document.getElementById('user-name-nav');
+      const emailEl = document.getElementById('user-email-nav');
+      const avatarEl = document.getElementById('user-avatar-nav');
+      if (navEl) navEl.textContent = user.username;
+      if (emailEl) emailEl.textContent = user.email;
+      if (avatarEl) avatarEl.textContent = user.username[0].toUpperCase();
+    });
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    const tab = validTabs.includes(hash) ? hash : 'overview';
+    showTab(tab);
+  });
+</script>
+</body>
+</html>

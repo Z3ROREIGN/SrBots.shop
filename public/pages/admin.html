@@ -1,0 +1,1086 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Painel Admin — SrBots</title>
+  <link rel="icon" href="/assets/img/favicon.ico">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/assets/css/main.css">
+  <style>
+    .admin-layout { display:grid; grid-template-columns:260px 1fr; min-height:100vh; padding-top:70px; }
+    .admin-sidebar { background:var(--bg-secondary); border-right:1px solid var(--border); padding:1.5rem 1rem; position:sticky; top:70px; height:calc(100vh - 70px); overflow-y:auto; }
+    .admin-content { padding:2rem; overflow-x:hidden; }
+    .admin-nav-section { font-size:0.7rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; color:var(--text-muted); padding:0.5rem 1rem; margin-top:1rem; }
+    .tab-content { display:none; }
+    .tab-content.active { display:block; }
+    .data-table { width:100%; border-collapse:collapse; }
+    .data-table th { padding:0.75rem 1rem; text-align:left; font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; color:var(--text-muted); background:var(--bg-secondary); border-bottom:1px solid var(--border); white-space:nowrap; }
+    .data-table td { padding:0.875rem 1rem; font-size:0.875rem; border-bottom:1px solid var(--border); vertical-align:middle; }
+    .data-table tbody tr:hover { background:var(--bg-card-hover); }
+    .data-table tbody tr:last-child td { border-bottom:none; }
+    .search-bar { display:flex; gap:0.75rem; align-items:center; flex-wrap:wrap; margin-bottom:1.25rem; }
+    .chart-bar { height:8px; background:var(--gradient-primary); border-radius:4px; transition:width 0.5s ease; }
+    @media(max-width:900px) { .admin-layout { grid-template-columns:1fr; } .admin-sidebar { position:static; height:auto; } }
+  </style>
+</head>
+<body>
+<nav class="navbar">
+  <div class="navbar-inner">
+    <a href="/" class="navbar-logo"><div class="logo-icon">🤖</div><span class="gradient-text">SrBots</span> <span class="badge badge-red font-xs" style="margin-left:0.25rem">ADMIN</span></a>
+    <div class="navbar-actions">
+      <a href="/dashboard" class="btn btn-secondary btn-sm">Dashboard</a>
+      <button onclick="handleLogout()" class="btn btn-ghost btn-sm">Sair</button>
+    </div>
+  </div>
+</nav>
+
+<div class="admin-layout">
+  <!-- Sidebar -->
+  <aside class="admin-sidebar">
+    <div class="admin-nav-section">Principal</div>
+    <nav class="dashboard-nav">
+      <button class="dashboard-nav-item active" onclick="showAdminTab('dashboard')" id="atab-dashboard"><span class="icon">📊</span> Dashboard</button>
+    </nav>
+    <div class="admin-nav-section">Loja</div>
+    <nav class="dashboard-nav">
+      <button class="dashboard-nav-item" onclick="showAdminTab('products')" id="atab-products"><span class="icon">📦</span> Produtos</button>
+      <button class="dashboard-nav-item" onclick="showAdminTab('categories')" id="atab-categories"><span class="icon">🏷️</span> Categorias</button>
+      <button class="dashboard-nav-item" onclick="showAdminTab('coupons')" id="atab-coupons"><span class="icon">🎟️</span> Cupons</button>
+    </nav>
+    <div class="admin-nav-section">Clientes</div>
+    <nav class="dashboard-nav">
+      <button class="dashboard-nav-item" onclick="showAdminTab('orders')" id="atab-orders"><span class="icon">🛒</span> Pedidos</button>
+      <button class="dashboard-nav-item" onclick="showAdminTab('users')" id="atab-users"><span class="icon">👥</span> Usuários</button>
+    </nav>
+    <div class="admin-nav-section">Sistema</div>
+    <nav class="dashboard-nav">
+      <button class="dashboard-nav-item" onclick="showAdminTab('bots')" id="atab-bots"><span class="icon">🤖</span> Bots Hospedados</button>
+      <button class="dashboard-nav-item" onclick="showAdminTab('status')" id="atab-status"><span class="icon">🟢</span> Status</button>
+      <button class="dashboard-nav-item" onclick="showAdminTab('webhooks')" id="atab-webhooks"><span class="icon">🔔</span> Webhooks</button>
+      <button class="dashboard-nav-item" onclick="showAdminTab('logs')" id="atab-logs"><span class="icon">📜</span> Logs</button>
+      <button class="dashboard-nav-item" onclick="showAdminTab('settings')" id="atab-settings"><span class="icon">⚙️</span> Configurações</button>
+    </nav>
+  </aside>
+
+  <!-- Content -->
+  <main class="admin-content">
+
+    <!-- ── DASHBOARD ──────────────────────────────────────── -->
+    <div class="tab-content active" id="content-dashboard">
+      <h2 style="margin-bottom:1.5rem">📊 Dashboard</h2>
+      <div class="grid grid-4" id="admin-stats" style="margin-bottom:2rem">
+        <div class="skeleton" style="height:100px;border-radius:var(--radius-lg)"></div>
+        <div class="skeleton" style="height:100px;border-radius:var(--radius-lg)"></div>
+        <div class="skeleton" style="height:100px;border-radius:var(--radius-lg)"></div>
+        <div class="skeleton" style="height:100px;border-radius:var(--radius-lg)"></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem">
+        <div class="card">
+          <h4 style="margin-bottom:1rem">📈 Receita (30 dias)</h4>
+          <div id="revenue-chart" style="display:flex;flex-direction:column;gap:0.5rem"></div>
+        </div>
+        <div class="card">
+          <h4 style="margin-bottom:1rem">🛒 Pedidos Recentes</h4>
+          <div id="recent-orders-list"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── PRODUTOS ───────────────────────────────────────── -->
+    <div class="tab-content" id="content-products">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem">
+        <h2>📦 Produtos</h2>
+        <button class="btn btn-primary" onclick="openProductModal()">+ Novo Produto</button>
+      </div>
+      <div class="search-bar">
+        <input type="text" class="form-input" placeholder="Buscar produto..." style="max-width:300px" oninput="Utils.debounce(() => loadAdminProducts(), 400)()">
+      </div>
+      <div class="table-wrapper">
+        <table class="data-table">
+          <thead><tr><th>ID</th><th>Produto</th><th>Categoria</th><th>Tipo</th><th>Preço</th><th>Vendas</th><th>Status</th><th>Ações</th></tr></thead>
+          <tbody id="products-tbody"><tr><td colspan="8" style="text-align:center;padding:2rem;color:var(--text-muted)">Carregando...</td></tr></tbody>
+        </table>
+      </div>
+      <div class="pagination mt-3" id="products-pagination"></div>
+    </div>
+
+    <!-- ── CATEGORIAS ─────────────────────────────────────── -->
+    <div class="tab-content" id="content-categories">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem">
+        <h2>🏷️ Categorias</h2>
+        <button class="btn btn-primary" onclick="openCategoryModal()">+ Nova Categoria</button>
+      </div>
+      <div class="table-wrapper">
+        <table class="data-table">
+          <thead><tr><th>ID</th><th>Nome</th><th>Slug</th><th>Ícone</th><th>Cor</th><th>Ordem</th><th>Status</th><th>Ações</th></tr></thead>
+          <tbody id="categories-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ── CUPONS ─────────────────────────────────────────── -->
+    <div class="tab-content" id="content-coupons">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem">
+        <h2>🎟️ Cupons de Desconto</h2>
+        <button class="btn btn-primary" onclick="openCouponModal()">+ Novo Cupom</button>
+      </div>
+      <div class="table-wrapper">
+        <table class="data-table">
+          <thead><tr><th>Código</th><th>Tipo</th><th>Desconto</th><th>Usos</th><th>Máx. Usos</th><th>Expira</th><th>Status</th><th>Ações</th></tr></thead>
+          <tbody id="coupons-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ── PEDIDOS ────────────────────────────────────────── -->
+    <div class="tab-content" id="content-orders">
+      <h2 style="margin-bottom:1.5rem">🛒 Pedidos</h2>
+      <div class="search-bar">
+        <input type="text" id="orders-search" class="form-input" placeholder="Buscar por número, usuário..." style="max-width:300px" oninput="loadAdminOrders()">
+        <select id="orders-status-filter" class="form-select" style="width:auto" onchange="loadAdminOrders()">
+          <option value="">Todos os status</option>
+          <option value="pending">Pendente</option>
+          <option value="paid">Pago</option>
+          <option value="delivered">Entregue</option>
+          <option value="cancelled">Cancelado</option>
+          <option value="refunded">Reembolsado</option>
+        </select>
+      </div>
+      <div class="table-wrapper">
+        <table class="data-table">
+          <thead><tr><th>Número</th><th>Usuário</th><th>Produto</th><th>Valor</th><th>Status</th><th>Data</th><th>Ações</th></tr></thead>
+          <tbody id="orders-tbody"></tbody>
+        </table>
+      </div>
+      <div class="pagination mt-3" id="orders-pagination"></div>
+    </div>
+
+    <!-- ── USUÁRIOS ───────────────────────────────────────── -->
+    <div class="tab-content" id="content-users">
+      <h2 style="margin-bottom:1.5rem">👥 Usuários</h2>
+      <div class="search-bar">
+        <input type="text" id="users-search" class="form-input" placeholder="Buscar por email, username..." style="max-width:300px" oninput="loadAdminUsers()">
+      </div>
+      <div class="table-wrapper">
+        <table class="data-table">
+          <thead><tr><th>ID</th><th>Username</th><th>Email</th><th>Role</th><th>Compras</th><th>Bots</th><th>Limite Bots</th><th>Status</th><th>Ações</th></tr></thead>
+          <tbody id="users-tbody"></tbody>
+        </table>
+      </div>
+      <div class="pagination mt-3" id="users-pagination"></div>
+    </div>
+
+    <!-- ── BOTS ───────────────────────────────────────────── -->
+    <div class="tab-content" id="content-bots">
+      <h2 style="margin-bottom:1.5rem">🤖 Bots Hospedados</h2>
+      <div class="search-bar">
+        <input type="text" id="bots-search" class="form-input" placeholder="Buscar bot ou usuário..." style="max-width:300px" oninput="loadAdminBots()">
+      </div>
+      <div class="table-wrapper">
+        <table class="data-table">
+          <thead><tr><th>ID</th><th>Nome do Bot</th><th>Usuário</th><th>Tipo</th><th>Servidor</th><th>Status</th><th>Criado</th><th>Ações</th></tr></thead>
+          <tbody id="bots-tbody"></tbody>
+        </table>
+      </div>
+      <div class="pagination mt-3" id="bots-pagination"></div>
+    </div>
+
+    <!-- ── STATUS ─────────────────────────────────────────── -->
+    <div class="tab-content" id="content-status">
+      <h2 style="margin-bottom:1.5rem">🟢 Status do Sistema</h2>
+      <div class="card">
+        <p class="text-secondary font-sm mb-3">Atualize o status de cada serviço abaixo e clique em Salvar.</p>
+        <div id="status-services-edit"></div>
+        <button class="btn btn-primary mt-3" onclick="saveStatus()">💾 Salvar Status</button>
+      </div>
+    </div>
+
+    <!-- ── WEBHOOKS ───────────────────────────────────────── -->
+    <div class="tab-content" id="content-webhooks">
+      <h2 style="margin-bottom:1.5rem">🔔 Webhooks Recebidos</h2>
+      <div class="table-wrapper">
+        <table class="data-table">
+          <thead><tr><th>ID</th><th>Transaction ID</th><th>Evento</th><th>Processado</th><th>Recebido</th></tr></thead>
+          <tbody id="webhooks-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ── LOGS ───────────────────────────────────────────── -->
+    <div class="tab-content" id="content-logs">
+      <h2 style="margin-bottom:1.5rem">📜 Logs de Atividade</h2>
+      <div class="table-wrapper">
+        <table class="data-table">
+          <thead><tr><th>ID</th><th>Usuário</th><th>Ação</th><th>Entidade</th><th>IP</th><th>Data</th></tr></thead>
+          <tbody id="logs-tbody"></tbody>
+        </table>
+      </div>
+      <div class="pagination mt-3" id="logs-pagination"></div>
+    </div>
+
+    <!-- ── CONFIGURAÇÕES ──────────────────────────────────── -->
+    <div class="tab-content" id="content-settings">
+      <h2 style="margin-bottom:1.5rem">⚙️ Configurações do Sistema</h2>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem">
+        <!-- Geral -->
+        <div class="card">
+          <h4 style="margin-bottom:1.25rem">🌐 Informações do Site</h4>
+          <div style="display:flex;flex-direction:column;gap:1rem">
+            <div class="form-group"><label class="form-label">Nome do Site</label><input type="text" id="cfg-site_name" class="form-input"></div>
+            <div class="form-group"><label class="form-label">Descrição</label><input type="text" id="cfg-site_description" class="form-input"></div>
+            <div class="form-group"><label class="form-label">URL do Site</label><input type="text" id="cfg-site_url" class="form-input" placeholder="https://srbots.shop"></div>
+            <div class="form-group"><label class="form-label">Discord de Suporte</label><input type="text" id="cfg-support_discord" class="form-input"></div>
+            <div class="form-group"><label class="form-label">Email de Suporte</label><input type="text" id="cfg-support_email" class="form-input"></div>
+          </div>
+        </div>
+        <!-- Pagamentos -->
+        <div class="card">
+          <h4 style="margin-bottom:1.25rem">💳 MisticPay</h4>
+          <div style="display:flex;flex-direction:column;gap:1rem">
+            <div class="form-group"><label class="form-label">Client ID (ci)</label><input type="text" id="cfg-misticpay_client_id" class="form-input" placeholder="Seu Client ID"></div>
+            <div class="form-group"><label class="form-label">Client Secret (cs)</label><input type="password" id="cfg-misticpay_client_secret" class="form-input" placeholder="Seu Client Secret"></div>
+            <div class="form-group"><label class="form-label">Expiração do Pix (minutos)</label><input type="number" id="cfg-payment_expiry_minutes" class="form-input" min="5" max="120"></div>
+          </div>
+          <h4 style="margin:1.25rem 0">🤖 Bots</h4>
+          <div style="display:flex;flex-direction:column;gap:1rem">
+            <div class="form-group"><label class="form-label">Limite Padrão de Bots por Usuário</label><input type="number" id="cfg-default_bot_limit" class="form-input" min="0"></div>
+          </div>
+        </div>
+        <!-- Sistema -->
+        <div class="card">
+          <h4 style="margin-bottom:1.25rem">🔧 Sistema</h4>
+          <div style="display:flex;flex-direction:column;gap:1rem">
+            <label style="display:flex;align-items:center;gap:0.75rem;cursor:pointer">
+              <input type="checkbox" id="cfg-maintenance_mode" style="accent-color:var(--purple);width:18px;height:18px">
+              <div><div style="font-weight:600;font-size:0.9rem">Modo de Manutenção</div><div class="text-muted font-xs">Desabilita acesso ao site para usuários</div></div>
+            </label>
+            <label style="display:flex;align-items:center;gap:0.75rem;cursor:pointer">
+              <input type="checkbox" id="cfg-registration_enabled" style="accent-color:var(--purple);width:18px;height:18px">
+              <div><div style="font-weight:600;font-size:0.9rem">Registro de Usuários</div><div class="text-muted font-xs">Permite novos cadastros</div></div>
+            </label>
+          </div>
+        </div>
+      </div>
+      <button class="btn btn-primary btn-lg mt-4" onclick="saveSettings()">💾 Salvar Configurações</button>
+    </div>
+
+  </main>
+</div>
+
+<!-- ── MODAIS ─────────────────────────────────────────────── -->
+
+<!-- Modal Produto -->
+<div class="modal-overlay" id="product-modal">
+  <div class="modal" style="max-width:700px">
+    <div class="modal-header">
+      <h3 id="product-modal-title">Novo Produto</h3>
+      <button class="modal-close" onclick="closeModal('product-modal')">×</button>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem" id="product-form">
+      <div class="form-group" style="grid-column:1/-1"><label class="form-label">Nome *</label><input type="text" id="pf-name" class="form-input" placeholder="Nome do produto"></div>
+      <div class="form-group"><label class="form-label">Categoria *</label><select id="pf-category_id" class="form-select"><option value="">Selecione...</option></select></div>
+      <div class="form-group"><label class="form-label">Tipo *</label>
+        <select id="pf-product_type" class="form-select">
+          <option value="bot">Bot Discord</option>
+          <option value="source_code">Código Fonte</option>
+          <option value="script">Script</option>
+          <option value="panel">Painel</option>
+        </select>
+      </div>
+      <div class="form-group"><label class="form-label">Preço (R$) *</label><input type="number" id="pf-price" class="form-input" placeholder="29.90" step="0.01" min="0"></div>
+      <div class="form-group"><label class="form-label">Preço Original (R$)</label><input type="number" id="pf-original_price" class="form-input" placeholder="49.90" step="0.01" min="0"></div>
+      <div class="form-group" style="grid-column:1/-1"><label class="form-label">Descrição Curta</label><input type="text" id="pf-short_description" class="form-input" placeholder="Breve descrição do produto"></div>
+      <div class="form-group" style="grid-column:1/-1"><label class="form-label">Descrição Completa</label><textarea id="pf-description" class="form-textarea" placeholder="Descrição detalhada..."></textarea></div>
+      <div class="form-group"><label class="form-label">URL da Thumbnail</label><input type="url" id="pf-thumbnail_url" class="form-input" placeholder="https://..."></div>
+      <div class="form-group"><label class="form-label">Versão</label><input type="text" id="pf-version" class="form-input" placeholder="1.0.0"></div>
+      <div class="form-group"><label class="form-label">Estoque (vazio = ilimitado)</label><input type="number" id="pf-stock" class="form-input" placeholder="Ilimitado" min="0"></div>
+      <div class="form-group"><label class="form-label">Tipo de Entrega</label>
+        <select id="pf-delivery_type" class="form-select" onchange="toggleDeliveryContent()">
+          <option value="automatic">Automática</option>
+          <option value="manual">Manual</option>
+        </select>
+      </div>
+      <div class="form-group" style="grid-column:1/-1" id="delivery-content-group">
+        <label class="form-label">Conteúdo de Entrega (JSON)</label>
+        <textarea id="pf-delivery_content" class="form-textarea font-mono" placeholder='{"download_url":"https://...","license_key":"XXXX","instructions":"Instruções aqui"}'></textarea>
+        <span class="text-muted font-xs">Campos: download_url, license_key, instructions, content</span>
+      </div>
+      <div class="form-group" style="grid-column:1/-1"><label class="form-label">Features (uma por linha)</label><textarea id="pf-features" class="form-textarea" placeholder="Entrega automática&#10;Suporte incluído&#10;Código fonte completo"></textarea></div>
+      <div class="form-group" style="grid-column:1/-1"><label class="form-label">Requisitos</label><textarea id="pf-requirements" class="form-textarea" placeholder="Node.js 18+, etc."></textarea></div>
+      <div style="display:flex;gap:1rem;grid-column:1/-1">
+        <label style="display:flex;align-items:center;gap:0.5rem;cursor:pointer"><input type="checkbox" id="pf-is_active" checked style="accent-color:var(--purple)"> Ativo</label>
+        <label style="display:flex;align-items:center;gap:0.5rem;cursor:pointer"><input type="checkbox" id="pf-is_featured" style="accent-color:var(--purple)"> Destaque</label>
+      </div>
+    </div>
+    <div style="display:flex;gap:0.75rem;margin-top:1.5rem">
+      <button class="btn btn-primary flex-1" onclick="saveProduct()" id="save-product-btn">Salvar Produto</button>
+      <button class="btn btn-secondary" onclick="closeModal('product-modal')">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Categoria -->
+<div class="modal-overlay" id="category-modal">
+  <div class="modal" style="max-width:480px">
+    <div class="modal-header">
+      <h3 id="category-modal-title">Nova Categoria</h3>
+      <button class="modal-close" onclick="closeModal('category-modal')">×</button>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:1rem">
+      <div class="form-group"><label class="form-label">Nome *</label><input type="text" id="cf-name" class="form-input"></div>
+      <div class="form-group"><label class="form-label">Ícone (emoji)</label><input type="text" id="cf-icon" class="form-input" placeholder="🤖"></div>
+      <div class="form-group"><label class="form-label">Cor (hex)</label><input type="color" id="cf-color" class="form-input" value="#7c3aed" style="height:42px;padding:0.25rem"></div>
+      <div class="form-group"><label class="form-label">Descrição</label><textarea id="cf-description" class="form-textarea" style="min-height:80px"></textarea></div>
+      <div class="form-group"><label class="form-label">Ordem</label><input type="number" id="cf-sort_order" class="form-input" value="0" min="0"></div>
+      <div style="display:flex;gap:0.75rem">
+        <button class="btn btn-primary flex-1" onclick="saveCategory()">Salvar</button>
+        <button class="btn btn-secondary" onclick="closeModal('category-modal')">Cancelar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Cupom -->
+<div class="modal-overlay" id="coupon-modal">
+  <div class="modal" style="max-width:480px">
+    <div class="modal-header">
+      <h3>Novo Cupom</h3>
+      <button class="modal-close" onclick="closeModal('coupon-modal')">×</button>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:1rem">
+      <div class="form-group"><label class="form-label">Código *</label><input type="text" id="coup-code" class="form-input" placeholder="DESCONTO20" style="text-transform:uppercase"></div>
+      <div class="form-group"><label class="form-label">Tipo de Desconto *</label>
+        <select id="coup-discount_type" class="form-select">
+          <option value="percentage">Porcentagem (%)</option>
+          <option value="fixed">Valor Fixo (R$)</option>
+        </select>
+      </div>
+      <div class="form-group"><label class="form-label">Valor do Desconto *</label><input type="number" id="coup-discount_value" class="form-input" placeholder="20" step="0.01" min="0"></div>
+      <div class="form-group"><label class="form-label">Valor Mínimo do Pedido (R$)</label><input type="number" id="coup-min_order_value" class="form-input" placeholder="Sem mínimo" step="0.01" min="0"></div>
+      <div class="form-group"><label class="form-label">Máximo de Usos</label><input type="number" id="coup-max_uses" class="form-input" placeholder="Ilimitado" min="1"></div>
+      <div class="form-group"><label class="form-label">Expira em</label><input type="datetime-local" id="coup-expires_at" class="form-input"></div>
+      <div style="display:flex;gap:0.75rem">
+        <button class="btn btn-primary flex-1" onclick="saveCoupon()">Criar Cupom</button>
+        <button class="btn btn-secondary" onclick="closeModal('coupon-modal')">Cancelar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Editar Usuário -->
+<div class="modal-overlay" id="user-modal">
+  <div class="modal" style="max-width:480px">
+    <div class="modal-header">
+      <h3>Editar Usuário</h3>
+      <button class="modal-close" onclick="closeModal('user-modal')">×</button>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:1rem">
+      <div class="form-group"><label class="form-label">Username</label><input type="text" id="uf-username" class="form-input" disabled style="opacity:0.6"></div>
+      <div class="form-group"><label class="form-label">Email</label><input type="email" id="uf-email" class="form-input"></div>
+      <div class="form-group"><label class="form-label">Role</label>
+        <select id="uf-role" class="form-select">
+          <option value="user">Usuário</option>
+          <option value="admin">Admin</option>
+        </select>
+      </div>
+      <div class="form-group"><label class="form-label">Limite de Bots</label><input type="number" id="uf-bot_limit" class="form-input" min="0"></div>
+      <div class="form-group"><label class="form-label">Nova Senha (deixe vazio para não alterar)</label><input type="password" id="uf-password" class="form-input" placeholder="Nova senha..."></div>
+      <input type="hidden" id="uf-id">
+      <div style="display:flex;gap:0.75rem">
+        <button class="btn btn-primary flex-1" onclick="saveUser()">Salvar</button>
+        <button class="btn btn-secondary" onclick="closeModal('user-modal')">Cancelar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Ban -->
+<div class="modal-overlay" id="ban-modal">
+  <div class="modal" style="max-width:420px">
+    <div class="modal-header">
+      <h3>🚫 Banir Usuário</h3>
+      <button class="modal-close" onclick="closeModal('ban-modal')">×</button>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:1rem">
+      <p class="text-secondary font-sm">Informe o motivo do banimento:</p>
+      <div class="form-group"><label class="form-label">Motivo</label><textarea id="ban-reason" class="form-textarea" placeholder="Violação dos termos de uso..." style="min-height:80px"></textarea></div>
+      <input type="hidden" id="ban-user-id">
+      <div style="display:flex;gap:0.75rem">
+        <button class="btn btn-danger flex-1" onclick="confirmBan()">Banir</button>
+        <button class="btn btn-secondary" onclick="closeModal('ban-modal')">Cancelar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Pedido -->
+<div class="modal-overlay" id="order-modal">
+  <div class="modal" style="max-width:560px">
+    <div class="modal-header">
+      <h3>Detalhes do Pedido</h3>
+      <button class="modal-close" onclick="closeModal('order-modal')">×</button>
+    </div>
+    <div id="order-detail-content"></div>
+  </div>
+</div>
+
+<script src="/assets/js/app.js"></script>
+<script>
+  if (!Auth.requireAdmin()) { /* redirect */ }
+
+  let editingProductId = null;
+  let editingCategoryId = null;
+  let adminCategories = [];
+
+  function showAdminTab(tab) {
+    document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+    document.querySelectorAll('.dashboard-nav-item').forEach(el => el.classList.remove('active'));
+    document.getElementById(`content-${tab}`).classList.add('active');
+    const btn = document.getElementById(`atab-${tab}`);
+    if (btn) btn.classList.add('active');
+
+    const loaders = {
+      dashboard: loadAdminDashboard,
+      products: loadAdminProducts,
+      categories: loadAdminCategories,
+      coupons: loadAdminCoupons,
+      orders: loadAdminOrders,
+      users: loadAdminUsers,
+      bots: loadAdminBots,
+      status: loadAdminStatus,
+      webhooks: loadAdminWebhooks,
+      logs: loadAdminLogs,
+      settings: loadAdminSettings,
+    };
+    if (loaders[tab]) loaders[tab]();
+  }
+
+  // ── DASHBOARD ──────────────────────────────────────────────
+  async function loadAdminDashboard() {
+    const res = await API.get('/admin/dashboard');
+    if (res.error) return;
+    const { stats, recent_orders, revenue_chart } = res.data;
+
+    document.getElementById('admin-stats').innerHTML = `
+      <div class="stat-card"><div class="stat-card-icon purple">👥</div><div><div class="stat-card-value">${stats.total_users}</div><div class="stat-card-label">Usuários</div></div></div>
+      <div class="stat-card"><div class="stat-card-icon green">💰</div><div><div class="stat-card-value">R$ ${(stats.monthly_revenue||0).toFixed(2)}</div><div class="stat-card-label">Receita (30d)</div></div></div>
+      <div class="stat-card"><div class="stat-card-icon cyan">🛒</div><div><div class="stat-card-value">${stats.total_orders}</div><div class="stat-card-label">Pedidos Pagos</div></div></div>
+      <div class="stat-card"><div class="stat-card-icon yellow">⏳</div><div><div class="stat-card-value">${stats.pending_orders}</div><div class="stat-card-label">Pendentes</div></div></div>
+    `;
+
+    // Gráfico de receita
+    const maxRevenue = Math.max(...(revenue_chart.map(r => r.revenue) || [1]));
+    document.getElementById('revenue-chart').innerHTML = revenue_chart.slice(-14).map(r => `
+      <div style="display:flex;align-items:center;gap:0.75rem;font-size:0.75rem">
+        <span style="width:60px;color:var(--text-muted);text-align:right">${r.date?.slice(5)}</span>
+        <div style="flex:1;background:var(--bg-input);border-radius:4px;height:8px">
+          <div class="chart-bar" style="width:${Math.max(2, (r.revenue/maxRevenue)*100)}%"></div>
+        </div>
+        <span style="width:70px;font-weight:600;color:var(--green-light)">R$ ${r.revenue.toFixed(0)}</span>
+      </div>
+    `).join('') || '<p class="text-muted font-sm">Sem dados</p>';
+
+    // Pedidos recentes
+    document.getElementById('recent-orders-list').innerHTML = recent_orders.slice(0, 6).map(o => {
+      const s = Utils.statusLabel(o.status);
+      return `
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:0.5rem 0;border-bottom:1px solid var(--border);font-size:0.8rem">
+          <div>
+            <div style="font-weight:600">${o.username}</div>
+            <div class="text-muted">${Utils.truncate(o.product_name, 25)}</div>
+          </div>
+          <div style="text-align:right">
+            <div style="font-weight:700">R$ ${o.total_price.toFixed(2)}</div>
+            <span class="badge ${s.class}" style="font-size:0.65rem">${s.text}</span>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  // ── PRODUTOS ───────────────────────────────────────────────
+  async function loadAdminProducts(page = 1) {
+    const search = document.querySelector('#content-products .form-input')?.value || '';
+    const res = await API.get(`/admin/products?page=${page}&limit=15&search=${encodeURIComponent(search)}`);
+    if (res.error) return;
+
+    const tbody = document.getElementById('products-tbody');
+    tbody.innerHTML = res.data.items.map(p => `
+      <tr>
+        <td class="text-muted font-xs">#${p.id}</td>
+        <td>
+          <div style="font-weight:600;font-size:0.875rem">${p.name}</div>
+          <div class="text-muted font-xs">v${p.version || '1.0'}</div>
+        </td>
+        <td class="text-secondary font-sm">${p.category_name || '—'}</td>
+        <td><span class="badge badge-gray font-xs">${Utils.productTypeLabel(p.product_type)}</span></td>
+        <td style="font-weight:700">R$ ${p.price.toFixed(2)}</td>
+        <td class="text-secondary">${p.sales_count}</td>
+        <td><span class="badge ${p.is_active ? 'badge-green' : 'badge-red'}">${p.is_active ? 'Ativo' : 'Inativo'}</span></td>
+        <td>
+          <div style="display:flex;gap:0.5rem">
+            <button class="btn btn-secondary btn-sm" onclick="editProduct(${p.id})">✏️</button>
+            <button class="btn btn-danger btn-sm" onclick="deleteProduct(${p.id}, '${p.name.replace(/'/g,"\\'")}')">🗑</button>
+          </div>
+        </td>
+      </tr>
+    `).join('');
+
+    renderAdminPagination('products-pagination', res.data.pagination, loadAdminProducts);
+  }
+
+  async function openProductModal(id = null) {
+    editingProductId = id;
+    document.getElementById('product-modal-title').textContent = id ? 'Editar Produto' : 'Novo Produto';
+
+    // Carregar categorias no select
+    if (!adminCategories.length) {
+      const catRes = await API.get('/admin/categories');
+      adminCategories = catRes.data || [];
+    }
+    const catSelect = document.getElementById('pf-category_id');
+    catSelect.innerHTML = '<option value="">Selecione...</option>' + adminCategories.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+
+    if (id) {
+      const res = await API.get(`/admin/products?page=1&limit=1`);
+      // Buscar produto específico via listagem (simplificado)
+      // Em produção, adicionar endpoint GET /admin/products/:id
+    } else {
+      // Limpar form
+      ['name','short_description','description','thumbnail_url','version','requirements'].forEach(f => {
+        const el = document.getElementById(`pf-${f}`);
+        if (el) el.value = '';
+      });
+      document.getElementById('pf-price').value = '';
+      document.getElementById('pf-original_price').value = '';
+      document.getElementById('pf-stock').value = '';
+      document.getElementById('pf-features').value = '';
+      document.getElementById('pf-delivery_content').value = '';
+      document.getElementById('pf-is_active').checked = true;
+      document.getElementById('pf-is_featured').checked = false;
+      document.getElementById('pf-product_type').value = 'bot';
+      document.getElementById('pf-delivery_type').value = 'automatic';
+    }
+
+    openModal('product-modal');
+  }
+
+  function toggleDeliveryContent() {
+    const type = document.getElementById('pf-delivery_type').value;
+    document.getElementById('delivery-content-group').style.display = type === 'automatic' ? 'block' : 'none';
+  }
+
+  async function saveProduct() {
+    const name = document.getElementById('pf-name').value.trim();
+    const price = parseFloat(document.getElementById('pf-price').value);
+    const category_id = parseInt(document.getElementById('pf-category_id').value);
+
+    if (!name || !price || !category_id) { Toast.error('Preencha os campos obrigatórios'); return; }
+
+    const featuresRaw = document.getElementById('pf-features').value.trim();
+    const features = featuresRaw ? featuresRaw.split('\n').map(f => f.trim()).filter(Boolean) : [];
+
+    let deliveryContent = null;
+    const dcRaw = document.getElementById('pf-delivery_content').value.trim();
+    if (dcRaw) {
+      try { deliveryContent = JSON.parse(dcRaw); } catch { Toast.error('JSON de entrega inválido'); return; }
+    }
+
+    const payload = {
+      name, category_id, price,
+      original_price: parseFloat(document.getElementById('pf-original_price').value) || null,
+      product_type: document.getElementById('pf-product_type').value,
+      delivery_type: document.getElementById('pf-delivery_type').value,
+      delivery_content: deliveryContent,
+      short_description: document.getElementById('pf-short_description').value.trim() || null,
+      description: document.getElementById('pf-description').value.trim() || null,
+      thumbnail_url: document.getElementById('pf-thumbnail_url').value.trim() || null,
+      version: document.getElementById('pf-version').value.trim() || '1.0.0',
+      stock: document.getElementById('pf-stock').value ? parseInt(document.getElementById('pf-stock').value) : null,
+      requirements: document.getElementById('pf-requirements').value.trim() || null,
+      features,
+      is_active: document.getElementById('pf-is_active').checked,
+      is_featured: document.getElementById('pf-is_featured').checked,
+    };
+
+    const btn = document.getElementById('save-product-btn');
+    btn.disabled = true;
+
+    const res = editingProductId
+      ? await API.put(`/admin/products/${editingProductId}`, payload)
+      : await API.post('/admin/products', payload);
+
+    btn.disabled = false;
+
+    if (res.error) { Toast.error(res.error); return; }
+    Toast.success(editingProductId ? 'Produto atualizado!' : 'Produto criado!');
+    closeModal('product-modal');
+    loadAdminProducts();
+  }
+
+  async function deleteProduct(id, name) {
+    if (!confirm(`Desativar o produto "${name}"?`)) return;
+    const res = await API.delete(`/admin/products/${id}`);
+    if (res.error) { Toast.error(res.error); return; }
+    Toast.success('Produto desativado!');
+    loadAdminProducts();
+  }
+
+  // ── CATEGORIAS ─────────────────────────────────────────────
+  async function loadAdminCategories() {
+    const res = await API.get('/admin/categories');
+    if (res.error) return;
+    adminCategories = res.data;
+    document.getElementById('categories-tbody').innerHTML = res.data.map(c => `
+      <tr>
+        <td class="text-muted font-xs">#${c.id}</td>
+        <td style="font-weight:600">${c.name}</td>
+        <td class="font-mono text-muted font-xs">${c.slug}</td>
+        <td style="font-size:1.25rem">${c.icon || '—'}</td>
+        <td><div style="width:20px;height:20px;border-radius:4px;background:${c.color}"></div></td>
+        <td>${c.sort_order}</td>
+        <td><span class="badge ${c.is_active ? 'badge-green' : 'badge-red'}">${c.is_active ? 'Ativo' : 'Inativo'}</span></td>
+        <td>
+          <div style="display:flex;gap:0.5rem">
+            <button class="btn btn-secondary btn-sm" onclick="editCategory(${c.id})">✏️</button>
+            <button class="btn btn-danger btn-sm" onclick="deleteCategory(${c.id})">🗑</button>
+          </div>
+        </td>
+      </tr>
+    `).join('');
+  }
+
+  function openCategoryModal(id = null) {
+    editingCategoryId = id;
+    document.getElementById('category-modal-title').textContent = id ? 'Editar Categoria' : 'Nova Categoria';
+    if (!id) {
+      ['name','icon','description'].forEach(f => document.getElementById(`cf-${f}`).value = '');
+      document.getElementById('cf-color').value = '#7c3aed';
+      document.getElementById('cf-sort_order').value = '0';
+    }
+    openModal('category-modal');
+  }
+
+  function editCategory(id) {
+    const cat = adminCategories.find(c => c.id === id);
+    if (!cat) return;
+    editingCategoryId = id;
+    document.getElementById('category-modal-title').textContent = 'Editar Categoria';
+    document.getElementById('cf-name').value = cat.name;
+    document.getElementById('cf-icon').value = cat.icon || '';
+    document.getElementById('cf-color').value = cat.color || '#7c3aed';
+    document.getElementById('cf-description').value = cat.description || '';
+    document.getElementById('cf-sort_order').value = cat.sort_order;
+    openModal('category-modal');
+  }
+
+  async function saveCategory() {
+    const name = document.getElementById('cf-name').value.trim();
+    if (!name) { Toast.error('Nome é obrigatório'); return; }
+    const payload = {
+      name,
+      icon: document.getElementById('cf-icon').value.trim() || null,
+      color: document.getElementById('cf-color').value,
+      description: document.getElementById('cf-description').value.trim() || null,
+      sort_order: parseInt(document.getElementById('cf-sort_order').value) || 0,
+    };
+    const res = editingCategoryId
+      ? await API.put(`/admin/categories/${editingCategoryId}`, payload)
+      : await API.post('/admin/categories', payload);
+    if (res.error) { Toast.error(res.error); return; }
+    Toast.success('Categoria salva!');
+    closeModal('category-modal');
+    loadAdminCategories();
+  }
+
+  async function deleteCategory(id) {
+    if (!confirm('Remover esta categoria?')) return;
+    const res = await API.delete(`/admin/categories/${id}`);
+    if (res.error) { Toast.error(res.error); return; }
+    Toast.success('Categoria removida!');
+    loadAdminCategories();
+  }
+
+  // ── CUPONS ─────────────────────────────────────────────────
+  async function loadAdminCoupons() {
+    const res = await API.get('/admin/coupons');
+    if (res.error) return;
+    document.getElementById('coupons-tbody').innerHTML = res.data.map(c => `
+      <tr>
+        <td><span class="font-mono font-xs" style="background:var(--bg-input);padding:0.25rem 0.5rem;border-radius:4px">${c.code}</span></td>
+        <td>${c.discount_type === 'percentage' ? 'Porcentagem' : 'Fixo'}</td>
+        <td style="font-weight:700">${c.discount_type === 'percentage' ? c.discount_value + '%' : 'R$ ' + c.discount_value.toFixed(2)}</td>
+        <td>${c.uses_count}</td>
+        <td>${c.max_uses || '∞'}</td>
+        <td class="text-muted font-xs">${c.expires_at ? Utils.formatDateShort(c.expires_at) : '—'}</td>
+        <td><span class="badge ${c.is_active ? 'badge-green' : 'badge-red'}">${c.is_active ? 'Ativo' : 'Inativo'}</span></td>
+        <td><button class="btn btn-danger btn-sm" onclick="deleteCoupon(${c.id})">🗑</button></td>
+      </tr>
+    `).join('');
+  }
+
+  function openCouponModal() { openModal('coupon-modal'); }
+
+  async function saveCoupon() {
+    const code = document.getElementById('coup-code').value.trim().toUpperCase();
+    const discount_value = parseFloat(document.getElementById('coup-discount_value').value);
+    if (!code || !discount_value) { Toast.error('Preencha os campos obrigatórios'); return; }
+    const payload = {
+      code,
+      discount_type: document.getElementById('coup-discount_type').value,
+      discount_value,
+      min_order_value: parseFloat(document.getElementById('coup-min_order_value').value) || null,
+      max_uses: parseInt(document.getElementById('coup-max_uses').value) || null,
+      expires_at: document.getElementById('coup-expires_at').value || null,
+    };
+    const res = await API.post('/admin/coupons', payload);
+    if (res.error) { Toast.error(res.error); return; }
+    Toast.success('Cupom criado!');
+    closeModal('coupon-modal');
+    loadAdminCoupons();
+  }
+
+  async function deleteCoupon(id) {
+    if (!confirm('Remover este cupom?')) return;
+    const res = await API.delete(`/admin/coupons/${id}`);
+    if (res.error) { Toast.error(res.error); return; }
+    Toast.success('Cupom removido!');
+    loadAdminCoupons();
+  }
+
+  // ── PEDIDOS ────────────────────────────────────────────────
+  async function loadAdminOrders(page = 1) {
+    const search = document.getElementById('orders-search')?.value || '';
+    const status = document.getElementById('orders-status-filter')?.value || '';
+    const res = await API.get(`/admin/orders?page=${page}&limit=15&search=${encodeURIComponent(search)}&status=${status}`);
+    if (res.error) return;
+
+    document.getElementById('orders-tbody').innerHTML = res.data.items.map(o => {
+      const s = Utils.statusLabel(o.status);
+      return `
+        <tr>
+          <td class="font-mono font-xs">${o.order_number}</td>
+          <td>
+            <div style="font-weight:600;font-size:0.875rem">${o.username}</div>
+            <div class="text-muted font-xs">${o.email}</div>
+          </td>
+          <td class="text-secondary font-sm">${Utils.truncate(o.product_name, 30)}</td>
+          <td style="font-weight:700">R$ ${o.total_price.toFixed(2)}</td>
+          <td><span class="badge ${s.class}">${s.text}</span></td>
+          <td class="text-muted font-xs">${Utils.formatDateShort(o.created_at)}</td>
+          <td>
+            <div style="display:flex;gap:0.5rem">
+              <button class="btn btn-secondary btn-sm" onclick="viewOrder(${o.id})">👁</button>
+              ${o.status === 'pending' ? `<button class="btn btn-success btn-sm" onclick="markOrderPaid(${o.id})">✓ Pago</button>` : ''}
+            </div>
+          </td>
+        </tr>
+      `;
+    }).join('');
+
+    renderAdminPagination('orders-pagination', res.data.pagination, loadAdminOrders);
+  }
+
+  async function viewOrder(id) {
+    const res = await API.get(`/admin/orders/${id}`);
+    if (res.error) return;
+    const o = res.data;
+    const s = Utils.statusLabel(o.status);
+    document.getElementById('order-detail-content').innerHTML = `
+      <div style="display:flex;flex-direction:column;gap:0.75rem;font-size:0.875rem">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem">
+          <div><span class="text-muted">Número:</span> <span class="font-mono">${o.order_number}</span></div>
+          <div><span class="text-muted">Status:</span> <span class="badge ${s.class}">${s.text}</span></div>
+          <div><span class="text-muted">Usuário:</span> ${o.username} (${o.email})</div>
+          <div><span class="text-muted">Produto:</span> ${o.product_name}</div>
+          <div><span class="text-muted">Valor:</span> <strong>R$ ${o.total_price.toFixed(2)}</strong></div>
+          <div><span class="text-muted">Pagador:</span> ${o.payer_name || '—'}</div>
+          <div><span class="text-muted">CPF:</span> ${o.payer_document || '—'}</div>
+          <div><span class="text-muted">Pago em:</span> ${Utils.formatDate(o.paid_at)}</div>
+        </div>
+        ${o.delivery_data ? `<div><span class="text-muted">Entrega:</span><pre style="background:var(--bg-input);padding:0.75rem;border-radius:var(--radius-md);font-size:0.75rem;overflow:auto;margin-top:0.5rem">${JSON.stringify(o.delivery_data, null, 2)}</pre></div>` : ''}
+        <div style="display:flex;gap:0.75rem;margin-top:0.5rem">
+          ${o.status === 'pending' ? `<button class="btn btn-success btn-sm" onclick="markOrderPaid(${o.id});closeModal('order-modal')">✓ Marcar como Pago</button>` : ''}
+          ${o.status === 'paid' ? `<button class="btn btn-secondary btn-sm" onclick="markOrderDelivered(${o.id});closeModal('order-modal')">📦 Marcar Entregue</button>` : ''}
+        </div>
+      </div>
+    `;
+    openModal('order-modal');
+  }
+
+  async function markOrderPaid(id) {
+    const res = await API.put(`/admin/orders/${id}`, { status: 'paid' });
+    if (res.error) { Toast.error(res.error); return; }
+    Toast.success('Pedido marcado como pago!');
+    loadAdminOrders();
+  }
+
+  async function markOrderDelivered(id) {
+    const res = await API.put(`/admin/orders/${id}`, { status: 'delivered' });
+    if (res.error) { Toast.error(res.error); return; }
+    Toast.success('Pedido marcado como entregue!');
+    loadAdminOrders();
+  }
+
+  // ── USUÁRIOS ───────────────────────────────────────────────
+  async function loadAdminUsers(page = 1) {
+    const search = document.getElementById('users-search')?.value || '';
+    const res = await API.get(`/admin/users?page=${page}&limit=15&search=${encodeURIComponent(search)}`);
+    if (res.error) return;
+
+    document.getElementById('users-tbody').innerHTML = res.data.items.map(u => `
+      <tr>
+        <td class="text-muted font-xs">#${u.id}</td>
+        <td style="font-weight:600">${u.username}</td>
+        <td class="text-secondary font-sm">${u.email}</td>
+        <td><span class="badge ${u.role === 'admin' ? 'badge-purple' : 'badge-gray'}">${u.role}</span></td>
+        <td>${u.total_purchases || 0}</td>
+        <td>${u.total_bots || 0}</td>
+        <td>
+          <div style="display:flex;align-items:center;gap:0.5rem">
+            <span>${u.bot_limit}</span>
+            <button class="btn btn-ghost btn-sm" onclick="quickUpdateBotLimit(${u.id}, ${u.bot_limit})" title="Alterar limite">✏️</button>
+          </div>
+        </td>
+        <td><span class="badge ${u.is_banned ? 'badge-red' : 'badge-green'}">${u.is_banned ? '🚫 Banido' : '✓ Ativo'}</span></td>
+        <td>
+          <div style="display:flex;gap:0.25rem;flex-wrap:wrap">
+            <button class="btn btn-secondary btn-sm" onclick="editUser(${u.id})" title="Editar">✏️</button>
+            ${u.is_banned
+              ? `<button class="btn btn-success btn-sm" onclick="unbanUser(${u.id})" title="Desbanir">✓</button>`
+              : `<button class="btn btn-danger btn-sm" onclick="openBanModal(${u.id})" title="Banir">🚫</button>`
+            }
+          </div>
+        </td>
+      </tr>
+    `).join('');
+
+    renderAdminPagination('users-pagination', res.data.pagination, loadAdminUsers);
+  }
+
+  async function editUser(id) {
+    const res = await API.get(`/admin/users/${id}`);
+    if (res.error) return;
+    const u = res.data;
+    document.getElementById('uf-id').value = u.id;
+    document.getElementById('uf-username').value = u.username;
+    document.getElementById('uf-email').value = u.email;
+    document.getElementById('uf-role').value = u.role;
+    document.getElementById('uf-bot_limit').value = u.bot_limit;
+    document.getElementById('uf-password').value = '';
+    openModal('user-modal');
+  }
+
+  async function saveUser() {
+    const id = document.getElementById('uf-id').value;
+    const payload = {
+      email: document.getElementById('uf-email').value,
+      role: document.getElementById('uf-role').value,
+      bot_limit: parseInt(document.getElementById('uf-bot_limit').value),
+    };
+    const pwd = document.getElementById('uf-password').value;
+    if (pwd) payload.password = pwd;
+    const res = await API.put(`/admin/users/${id}`, payload);
+    if (res.error) { Toast.error(res.error); return; }
+    Toast.success('Usuário atualizado!');
+    closeModal('user-modal');
+    loadAdminUsers();
+  }
+
+  async function quickUpdateBotLimit(userId, current) {
+    const newLimit = prompt(`Novo limite de bots para este usuário (atual: ${current}):`, current);
+    if (newLimit === null || isNaN(parseInt(newLimit))) return;
+    const res = await API.put(`/admin/users/${userId}`, { bot_limit: parseInt(newLimit) });
+    if (res.error) { Toast.error(res.error); return; }
+    Toast.success(`Limite alterado para ${newLimit}!`);
+    loadAdminUsers();
+  }
+
+  function openBanModal(id) {
+    document.getElementById('ban-user-id').value = id;
+    document.getElementById('ban-reason').value = '';
+    openModal('ban-modal');
+  }
+
+  async function confirmBan() {
+    const id = document.getElementById('ban-user-id').value;
+    const reason = document.getElementById('ban-reason').value.trim() || 'Violação dos termos de uso';
+    const res = await API.post(`/admin/users/${id}/ban`, { reason });
+    if (res.error) { Toast.error(res.error); return; }
+    Toast.success('Usuário banido!');
+    closeModal('ban-modal');
+    loadAdminUsers();
+  }
+
+  async function unbanUser(id) {
+    if (!confirm('Desbanir este usuário?')) return;
+    const res = await API.post(`/admin/users/${id}/unban`);
+    if (res.error) { Toast.error(res.error); return; }
+    Toast.success('Usuário desbanido!');
+    loadAdminUsers();
+  }
+
+  // ── BOTS ───────────────────────────────────────────────────
+  async function loadAdminBots(page = 1) {
+    const search = document.getElementById('bots-search')?.value || '';
+    const res = await API.get(`/admin/bots?page=${page}&limit=15&search=${encodeURIComponent(search)}`);
+    if (res.error) return;
+
+    document.getElementById('bots-tbody').innerHTML = res.data.items.map(b => {
+      const s = Utils.botStatusLabel(b.status);
+      return `
+        <tr>
+          <td class="text-muted font-xs">#${b.id}</td>
+          <td style="font-weight:600">${b.bot_name}</td>
+          <td>
+            <div style="font-size:0.875rem">${b.username}</div>
+            <div class="text-muted font-xs">${b.email}</div>
+          </td>
+          <td><span class="badge badge-gray font-xs">${b.bot_type}</span></td>
+          <td class="text-secondary font-sm">${b.server_name || '—'}</td>
+          <td><span class="badge ${s.class}">${s.text}</span></td>
+          <td class="text-muted font-xs">${Utils.formatDateShort(b.created_at)}</td>
+          <td>
+            <div style="display:flex;gap:0.5rem">
+              <select class="form-select" style="font-size:0.75rem;padding:0.25rem 0.5rem;height:auto" onchange="updateBotStatus(${b.id}, this.value)">
+                <option value="online" ${b.status==='online'?'selected':''}>Online</option>
+                <option value="offline" ${b.status==='offline'?'selected':''}>Offline</option>
+                <option value="suspended" ${b.status==='suspended'?'selected':''}>Suspenso</option>
+                <option value="error" ${b.status==='error'?'selected':''}>Erro</option>
+              </select>
+              <button class="btn btn-danger btn-sm" onclick="adminDeleteBot(${b.id})">🗑</button>
+            </div>
+          </td>
+        </tr>
+      `;
+    }).join('');
+
+    renderAdminPagination('bots-pagination', res.data.pagination, loadAdminBots);
+  }
+
+  async function updateBotStatus(id, status) {
+    const res = await API.put(`/admin/bots/${id}`, { status });
+    if (res.error) { Toast.error(res.error); return; }
+    Toast.success('Status do bot atualizado!');
+  }
+
+  async function adminDeleteBot(id) {
+    if (!confirm('Remover este bot?')) return;
+    const res = await API.delete(`/admin/bots/${id}`);
+    if (res.error) { Toast.error(res.error); return; }
+    Toast.success('Bot removido!');
+    loadAdminBots();
+  }
+
+  // ── STATUS ─────────────────────────────────────────────────
+  let statusServices = [];
+  async function loadAdminStatus() {
+    const res = await API.get('/admin/status');
+    if (res.error) return;
+    statusServices = res.data;
+    document.getElementById('status-services-edit').innerHTML = res.data.map(s => `
+      <div style="display:grid;grid-template-columns:1fr auto auto;gap:1rem;align-items:center;padding:0.75rem;background:var(--bg-input);border-radius:var(--radius-md);margin-bottom:0.5rem">
+        <div style="font-weight:600;font-size:0.9rem">${s.service_name}</div>
+        <select id="svc-status-${s.id}" class="form-select" style="width:auto">
+          <option value="operational" ${s.status==='operational'?'selected':''}>✅ Operacional</option>
+          <option value="degraded" ${s.status==='degraded'?'selected':''}>⚠️ Degradado</option>
+          <option value="outage" ${s.status==='outage'?'selected':''}>🔴 Fora do Ar</option>
+        </select>
+        <input type="text" id="svc-msg-${s.id}" class="form-input" value="${s.message || ''}" placeholder="Mensagem opcional" style="min-width:200px">
+      </div>
+    `).join('');
+  }
+
+  async function saveStatus() {
+    const services = statusServices.map(s => ({
+      id: s.id,
+      status: document.getElementById(`svc-status-${s.id}`).value,
+      message: document.getElementById(`svc-msg-${s.id}`).value.trim() || null,
+    }));
+    const res = await API.put('/admin/status', { services });
+    if (res.error) { Toast.error(res.error); return; }
+    Toast.success('Status atualizado!');
+  }
+
+  // ── WEBHOOKS ───────────────────────────────────────────────
+  async function loadAdminWebhooks() {
+    const res = await API.get('/admin/webhooks');
+    if (res.error) return;
+    document.getElementById('webhooks-tbody').innerHTML = res.data.items.map(w => `
+      <tr>
+        <td class="text-muted font-xs">#${w.id}</td>
+        <td class="font-mono font-xs">${w.transaction_id}</td>
+        <td><span class="badge badge-blue font-xs">${w.event_type}</span></td>
+        <td><span class="badge ${w.processed ? 'badge-green' : 'badge-yellow'}">${w.processed ? '✓ Processado' : '⏳ Pendente'}</span></td>
+        <td class="text-muted font-xs">${Utils.formatDate(w.created_at)}</td>
+      </tr>
+    `).join('');
+  }
+
+  // ── LOGS ───────────────────────────────────────────────────
+  async function loadAdminLogs(page = 1) {
+    const res = await API.get(`/admin/logs?page=${page}&limit=50`);
+    if (res.error) return;
+    document.getElementById('logs-tbody').innerHTML = res.data.items.map(l => `
+      <tr>
+        <td class="text-muted font-xs">#${l.id}</td>
+        <td class="font-sm">${l.username || `#${l.user_id}` || '—'}</td>
+        <td><span class="badge badge-blue font-xs">${l.action}</span></td>
+        <td class="text-muted font-xs">${l.entity_type ? `${l.entity_type} #${l.entity_id}` : '—'}</td>
+        <td class="font-mono text-muted font-xs">${l.ip_address || '—'}</td>
+        <td class="text-muted font-xs">${Utils.formatDate(l.created_at)}</td>
+      </tr>
+    `).join('');
+    renderAdminPagination('logs-pagination', res.data.pagination, loadAdminLogs);
+  }
+
+  // ── CONFIGURAÇÕES ──────────────────────────────────────────
+  async function loadAdminSettings() {
+    const res = await API.get('/admin/settings');
+    if (res.error) return;
+    const cfg = res.data;
+    const textFields = ['site_name','site_description','site_url','support_discord','support_email','misticpay_client_id','misticpay_client_secret','payment_expiry_minutes','default_bot_limit'];
+    textFields.forEach(k => {
+      const el = document.getElementById(`cfg-${k}`);
+      if (el) el.value = cfg[k] || '';
+    });
+    const maintenanceEl = document.getElementById('cfg-maintenance_mode');
+    if (maintenanceEl) maintenanceEl.checked = cfg.maintenance_mode === '1';
+    const regEl = document.getElementById('cfg-registration_enabled');
+    if (regEl) regEl.checked = cfg.registration_enabled !== '0';
+  }
+
+  async function saveSettings() {
+    const payload = {};
+    const textFields = ['site_name','site_description','site_url','support_discord','support_email','misticpay_client_id','misticpay_client_secret','payment_expiry_minutes','default_bot_limit'];
+    textFields.forEach(k => {
+      const el = document.getElementById(`cfg-${k}`);
+      if (el) payload[k] = el.value;
+    });
+    payload.maintenance_mode = document.getElementById('cfg-maintenance_mode')?.checked ? '1' : '0';
+    payload.registration_enabled = document.getElementById('cfg-registration_enabled')?.checked ? '1' : '0';
+
+    const res = await API.put('/admin/settings', payload);
+    if (res.error) { Toast.error(res.error); return; }
+    Toast.success('Configurações salvas com sucesso!');
+  }
+
+  // ── HELPERS ────────────────────────────────────────────────
+  function renderAdminPagination(containerId, pagination, loadFn) {
+    const container = document.getElementById(containerId);
+    if (!container || pagination.pages <= 1) { if (container) container.innerHTML = ''; return; }
+    let html = `<button class="pagination-btn" onclick="${loadFn.name}(${pagination.page - 1})" ${pagination.page <= 1 ? 'disabled' : ''}>←</button>`;
+    for (let i = 1; i <= Math.min(pagination.pages, 10); i++) {
+      html += `<button class="pagination-btn ${i === pagination.page ? 'active' : ''}" onclick="${loadFn.name}(${i})">${i}</button>`;
+    }
+    html += `<button class="pagination-btn" onclick="${loadFn.name}(${pagination.page + 1})" ${pagination.page >= pagination.pages ? 'disabled' : ''}>→</button>`;
+    container.innerHTML = html;
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    loadAdminDashboard();
+  });
+</script>
+</body>
+</html>

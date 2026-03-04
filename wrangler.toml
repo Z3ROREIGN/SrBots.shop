@@ -1,0 +1,33 @@
+# Top-level configuration
+name = "srbots-shop"
+main = "src/worker.js"
+compatibility_date = "2023-12-01"
+
+# ─── Bindings ───────────────────────────────────────────────────
+
+# D1 Database
+# Create one with `wrangler d1 create srbots-db`
+# Then, add the `database_id` below.
+[[d1_databases]]
+binding = "DB" # Available in the Worker as `env.DB`
+database_name = "srbots-db"
+database_id = ""
+
+# Static Assets (Frontend)
+# This serves the `public` directory as a static website.
+[site]
+bucket = "./public"
+
+# ─── Environment Variables & Secrets ────────────────────────────
+
+# These are placeholders. You MUST set them in your Cloudflare dashboard
+# or via `wrangler secret put <KEY>`.
+[vars]
+# No plaintext vars needed for this project.
+
+# Secrets (run `wrangler secret put <KEY>` for each)
+# - JWT_SECRET: A long, random string for signing authentication tokens.
+# - MISTICPAY_CLIENT_ID: Your MisticPay Client ID.
+# - MISTICPAY_CLIENT_SECRET: Your MisticPay Client Secret.
+# - ADMIN_EMAIL: The email for the first admin user.
+# - ADMIN_PASSWORD: The password for the first admin user.

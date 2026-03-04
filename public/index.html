@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SrBots — A Melhor Loja de Bots e Scripts do Brasil</title>
+  <meta name="description" content="Compre bots Discord personalizados, código fonte, scripts e painéis. Entrega automática, pagamento via Pix.">
+  <meta property="og:title" content="SrBots — Bots, Scripts e Painéis">
+  <meta property="og:description" content="A melhor loja de bots e scripts do Brasil. Pagamento via Pix, entrega automática.">
+  <meta property="og:url" content="https://srbots.shop">
+  <link rel="icon" href="/assets/img/favicon.ico">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/assets/css/main.css">
+</head>
+<body>
+
+<!-- ── Navbar ──────────────────────────────────────────────── -->
+<nav class="navbar">
+  <div class="navbar-inner">
+    <a href="/" class="navbar-logo">
+      <div class="logo-icon">🤖</div>
+      <span class="gradient-text">SrBots</span>
+    </a>
+    <ul class="navbar-nav" id="navbar-nav">
+      <li><a href="/" class="active">Início</a></li>
+      <li><a href="/loja">Loja</a></li>
+      <li><a href="/status">Status</a></li>
+    </ul>
+    <div class="navbar-actions">
+      <div id="navbar-auth"></div>
+      <button class="navbar-mobile-btn" onclick="toggleMobileMenu()">☰</button>
+    </div>
+  </div>
+  <!-- Mobile Nav -->
+  <div id="mobile-nav" style="display:none;background:var(--bg-secondary);border-top:1px solid var(--border);padding:1rem 1.5rem">
+    <ul style="list-style:none;display:flex;flex-direction:column;gap:0.5rem">
+      <li><a href="/" style="display:block;padding:0.75rem;border-radius:var(--radius-md);color:var(--text-secondary)">Início</a></li>
+      <li><a href="/loja" style="display:block;padding:0.75rem;border-radius:var(--radius-md);color:var(--text-secondary)">Loja</a></li>
+      <li><a href="/status" style="display:block;padding:0.75rem;border-radius:var(--radius-md);color:var(--text-secondary)">Status</a></li>
+    </ul>
+  </div>
+</nav>
+
+<!-- ── Hero ────────────────────────────────────────────────── -->
+<section class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-particles" id="particles"></div>
+  <div class="container">
+    <div class="hero-content fade-in">
+      <div class="hero-badge">
+        <span>⚡</span>
+        <span>Entrega Automática via Pix</span>
+      </div>
+      <h1 class="hero-title">
+        A Melhor Loja de<br>
+        <span class="gradient-text">Bots & Scripts</span><br>
+        do Brasil
+      </h1>
+      <p class="hero-subtitle">
+        Bots Discord personalizados, código fonte completo, scripts de automação e painéis profissionais. Pagamento via Pix com entrega instantânea.
+      </p>
+      <div class="hero-actions">
+        <a href="/loja" class="btn btn-primary btn-xl">
+          🛒 Ver Produtos
+        </a>
+        <a href="/registro" class="btn btn-secondary btn-xl">
+          Criar Conta Grátis
+        </a>
+      </div>
+      <div class="hero-stats" id="hero-stats">
+        <div class="hero-stat">
+          <div class="hero-stat-value" id="stat-users">—</div>
+          <div class="hero-stat-label">Clientes Satisfeitos</div>
+        </div>
+        <div class="hero-stat">
+          <div class="hero-stat-value" id="stat-products">—</div>
+          <div class="hero-stat-label">Produtos Disponíveis</div>
+        </div>
+        <div class="hero-stat">
+          <div class="hero-stat-value" id="stat-orders">—</div>
+          <div class="hero-stat-label">Pedidos Realizados</div>
+        </div>
+        <div class="hero-stat">
+          <div class="hero-stat-value" id="stat-bots">—</div>
+          <div class="hero-stat-label">Bots Online</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Features ────────────────────────────────────────────── -->
+<section class="section-sm" style="background:var(--bg-secondary);border-top:1px solid var(--border);border-bottom:1px solid var(--border)">
+  <div class="container">
+    <div class="grid grid-4" style="gap:1rem">
+      <div class="card text-center" style="padding:1.5rem">
+        <div style="font-size:2rem;margin-bottom:0.75rem">⚡</div>
+        <h4 style="margin-bottom:0.5rem">Entrega Instantânea</h4>
+        <p class="text-secondary font-sm">Receba seu produto automaticamente após o pagamento ser confirmado</p>
+      </div>
+      <div class="card text-center" style="padding:1.5rem">
+        <div style="font-size:2rem;margin-bottom:0.75rem">🔒</div>
+        <h4 style="margin-bottom:0.5rem">Pagamento Seguro</h4>
+        <p class="text-secondary font-sm">Pix processado pela MisticPay com verificação automática</p>
+      </div>
+      <div class="card text-center" style="padding:1.5rem">
+        <div style="font-size:2rem;margin-bottom:0.75rem">🤖</div>
+        <h4 style="margin-bottom:0.5rem">Suporte Especializado</h4>
+        <p class="text-secondary font-sm">Equipe técnica disponível para ajudar com seus produtos</p>
+      </div>
+      <div class="card text-center" style="padding:1.5rem">
+        <div style="font-size:2rem;margin-bottom:0.75rem">🔄</div>
+        <h4 style="margin-bottom:0.5rem">Atualizações Grátis</h4>
+        <p class="text-secondary font-sm">Receba atualizações dos produtos que você adquiriu</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Produtos em Destaque ─────────────────────────────────── -->
+<section class="section">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-tag">⭐ Em Destaque</div>
+      <h2 class="section-title">Produtos Mais Populares</h2>
+      <p class="section-subtitle">Os produtos mais vendidos e bem avaliados da nossa loja</p>
+    </div>
+    <div class="grid grid-auto" id="featured-products">
+      <!-- Skeletons -->
+      <div class="skeleton" style="height:380px;border-radius:var(--radius-lg)"></div>
+      <div class="skeleton" style="height:380px;border-radius:var(--radius-lg)"></div>
+      <div class="skeleton" style="height:380px;border-radius:var(--radius-lg)"></div>
+      <div class="skeleton" style="height:380px;border-radius:var(--radius-lg)"></div>
+    </div>
+    <div class="text-center mt-4">
+      <a href="/loja" class="btn btn-outline btn-lg">Ver Todos os Produtos →</a>
+    </div>
+  </div>
+</section>
+
+<!-- ── Categorias ───────────────────────────────────────────── -->
+<section class="section-sm" style="background:var(--bg-secondary);border-top:1px solid var(--border);border-bottom:1px solid var(--border)">
+  <div class="container">
+    <div class="section-header" style="margin-bottom:2rem">
+      <h2 class="section-title">Explore por Categoria</h2>
+    </div>
+    <div class="grid grid-4" id="categories-grid">
+      <div class="skeleton" style="height:120px;border-radius:var(--radius-lg)"></div>
+      <div class="skeleton" style="height:120px;border-radius:var(--radius-lg)"></div>
+      <div class="skeleton" style="height:120px;border-radius:var(--radius-lg)"></div>
+      <div class="skeleton" style="height:120px;border-radius:var(--radius-lg)"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ── CTA ──────────────────────────────────────────────────── -->
+<section class="section">
+  <div class="container">
+    <div style="background:linear-gradient(135deg,rgba(124,58,237,0.15),rgba(6,182,212,0.1));border:1px solid rgba(124,58,237,0.3);border-radius:var(--radius-xl);padding:4rem 2rem;text-align:center">
+      <h2 style="margin-bottom:1rem">Pronto para começar?</h2>
+      <p class="text-secondary" style="font-size:1.1rem;margin-bottom:2rem;max-width:500px;margin-left:auto;margin-right:auto">
+        Crie sua conta agora e tenha acesso a todos os nossos produtos com entrega automática via Pix.
+      </p>
+      <div style="display:flex;gap:1rem;justify-content:center;flex-wrap:wrap">
+        <a href="/registro" class="btn btn-primary btn-lg">Criar Conta Grátis</a>
+        <a href="/loja" class="btn btn-secondary btn-lg">Ver Produtos</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Footer ───────────────────────────────────────────────── -->
+<footer class="footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <div class="footer-brand-logo">
+          <div class="logo-icon" style="width:32px;height:32px;background:var(--gradient-primary);border-radius:var(--radius-md);display:flex;align-items:center;justify-content:center;font-size:1rem">🤖</div>
+          <span class="gradient-text">SrBots</span>
+        </div>
+        <p class="footer-brand-desc">A melhor loja de bots Discord, scripts e painéis do Brasil. Entrega automática, pagamento via Pix.</p>
+        <div style="margin-top:1rem;display:flex;gap:0.75rem">
+          <span id="footer-status" class="badge badge-green">
+            <span class="status-dot operational"></span> Todos os sistemas operacionais
+          </span>
+        </div>
+      </div>
+      <div class="footer-col">
+        <h4>Loja</h4>
+        <ul>
+          <li><a href="/loja">Todos os Produtos</a></li>
+          <li><a href="/loja?type=bot">Bots Discord</a></li>
+          <li><a href="/loja?type=source_code">Código Fonte</a></li>
+          <li><a href="/loja?type=script">Scripts</a></li>
+          <li><a href="/loja?type=panel">Painéis</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Conta</h4>
+        <ul>
+          <li><a href="/login">Entrar</a></li>
+          <li><a href="/registro">Criar Conta</a></li>
+          <li><a href="/dashboard">Dashboard</a></li>
+          <li><a href="/dashboard#purchases">Minhas Compras</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Suporte</h4>
+        <ul>
+          <li><a href="/status">Status do Sistema</a></li>
+          <li><a href="https://discord.gg/srbots" target="_blank">Discord</a></li>
+          <li><a href="mailto:contato@srbots.shop">Email</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>© 2024 SrBots. Todos os direitos reservados.</p>
+      <p>Feito com ❤️ no Brasil</p>
+    </div>
+  </div>
+</footer>
+
+<script src="/assets/js/app.js"></script>
+<script>
+  function toggleMobileMenu() {
+    const nav = document.getElementById('mobile-nav');
+    nav.style.display = nav.style.display === 'none' ? 'block' : 'none';
+  }
+
+  // Carregar estatísticas
+  async function loadStats() {
+    const res = await API.get('/status', false);
+    if (res.data?.stats) {
+      const { users, products, orders, bots_online } = res.data.stats;
+      document.getElementById('stat-users').textContent = users.toLocaleString('pt-BR') + '+';
+      document.getElementById('stat-products').textContent = products.toLocaleString('pt-BR');
+      document.getElementById('stat-orders').textContent = orders.toLocaleString('pt-BR') + '+';
+      document.getElementById('stat-bots').textContent = bots_online.toLocaleString('pt-BR');
+    }
+  }
+
+  // Carregar produtos em destaque
+  async function loadFeatured() {
+    const res = await API.get('/products/featured', false);
+    const container = document.getElementById('featured-products');
+    if (!res.data || res.error) {
+      container.innerHTML = '<p class="text-secondary text-center">Nenhum produto em destaque no momento.</p>';
+      return;
+    }
+    container.innerHTML = res.data.map(p => renderProductCard(p)).join('');
+  }
+
+  // Carregar categorias
+  async function loadCategories() {
+    const res = await API.get('/products/categories', false);
+    const container = document.getElementById('categories-grid');
+    if (!res.data) return;
+    container.innerHTML = res.data.map(c => `
+      <a href="/loja?category=${c.slug}" class="card card-hover" style="display:flex;align-items:center;gap:1rem;padding:1.5rem;text-decoration:none">
+        <div style="font-size:2.5rem">${c.icon || '📦'}</div>
+        <div>
+          <div style="font-weight:700;margin-bottom:0.25rem">${c.name}</div>
+          <div class="text-secondary font-sm">${c.product_count} produto${c.product_count !== 1 ? 's' : ''}</div>
+        </div>
+      </a>
+    `).join('');
+  }
+
+  function renderProductCard(p) {
+    const discount = p.original_price ? Math.round((1 - p.price / p.original_price) * 100) : 0;
+    return `
+      <div class="product-card card-hover fade-in">
+        ${p.is_featured ? '<span class="product-card-badge badge-featured">⭐ Destaque</span>' : ''}
+        ${discount > 0 ? `<span class="product-card-badge badge-sale" style="left:auto;right:1rem">-${discount}%</span>` : ''}
+        ${p.thumbnail_url
+          ? `<img src="${p.thumbnail_url}" alt="${p.name}" class="product-card-img" loading="lazy">`
+          : `<div class="product-card-img-placeholder">${Utils.productTypeIcon(p.product_type)}</div>`
+        }
+        <div class="product-card-body">
+          <div class="product-card-category" style="color:${p.category_color || 'var(--purple-light)'}">
+            ${p.category_name || Utils.productTypeLabel(p.product_type)}
+          </div>
+          <h3 class="product-card-title">${p.name}</h3>
+          <p class="product-card-desc">${p.short_description || p.description || ''}</p>
+          <div class="product-card-footer">
+            <div class="product-price">
+              <span class="product-price-current">${Utils.formatCurrency(p.price)}</span>
+              ${p.original_price ? `<span class="product-price-original">${Utils.formatCurrency(p.original_price)}</span>` : ''}
+            </div>
+            <a href="/produto?id=${p.id}" class="btn btn-primary btn-sm">Comprar</a>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  // Partículas animadas
+  function initParticles() {
+    const container = document.getElementById('particles');
+    if (!container) return;
+    for (let i = 0; i < 30; i++) {
+      const p = document.createElement('div');
+      const size = Math.random() * 3 + 1;
+      p.style.cssText = `
+        position:absolute;
+        width:${size}px;height:${size}px;
+        background:rgba(124,58,237,${Math.random() * 0.5 + 0.1});
+        border-radius:50%;
+        left:${Math.random() * 100}%;
+        top:${Math.random() * 100}%;
+        animation:float ${Math.random() * 10 + 10}s ease-in-out infinite;
+        animation-delay:-${Math.random() * 10}s;
+      `;
+      container.appendChild(p);
+    }
+    const style = document.createElement('style');
+    style.textContent = `@keyframes float{0%,100%{transform:translateY(0) translateX(0)}25%{transform:translateY(-20px) translateX(10px)}50%{transform:translateY(-10px) translateX(-10px)}75%{transform:translateY(-30px) translateX(5px)}}`;
+    document.head.appendChild(style);
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    initParticles();
+    loadStats();
+    loadFeatured();
+    loadCategories();
+  });
+</script>
+</body>
+</html>
