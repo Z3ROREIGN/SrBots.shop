@@ -1,7 +1,7 @@
 /**
  * SrBots.shop - Cloudflare Worker
  * Backend completo: API REST + Servir arquivos estáticos
- * Versão: 1.2.0 (Suporte para Workers Site e Cloudflare Pages)
+ * Versão: 1.3.0 (Otimizada para Cloudflare Pages & Workers Site)
  */
 
 import { handleAuth } from './routes/auth.js';
@@ -33,8 +33,7 @@ export default {
 
       // ── Servir arquivos estáticos ─────────────────────────────
       // Se estiver usando Cloudflare Pages, os arquivos são servidos automaticamente
-      // a menos que o Worker intercepte tudo. Se env.ASSETS não existir,
-      // assumimos que o Cloudflare deve lidar com os estáticos ou que há um erro de config.
+      // a menos que o Worker intercepte tudo. 
       return await serveStatic(request, env, path);
 
     } catch (err) {
@@ -170,52 +169,41 @@ function base64UrlDecode(str) {
 }
 
 async function serveStatic(request, env, path) {
-  // Se estiver usando Cloudflare Pages (sem binding ASSETS explícito no Worker),
-  // o Worker pode deixar passar para o Pages servir os arquivos.
-  if (!env.ASSETS) {
-    // Se for uma rota de API que chegou aqui, erro 404
-    if (path.startsWith('/api/')) return errorResponse('API Route not found', 404);
-    
-    // Se for um arquivo com extensão (ex: .css, .js, .png), deixa o Cloudflare servir
-    if (path.includes('.')) {
-      return fetch(request);
+  // Se houver ASSETS (Workers Site), tentamos carregar do KV
+  if (env.ASSETS) {
+    const routes = {
+      '/': '/index.html',
+      '/loja': '/pages/store.html',
+      '/produto': '/pages/product.html',
+      '/checkout': '/pages/checkout.html',
+      '/login': '/pages/login.html',
+      '/registro': '/pages/register.html',
+      '/dashboard': '/pages/dashboard.html',
+      '/admin': '/pages/admin.html',
+      '/status': '/pages/status.html',
+    };
+
+    let filePath = routes[path] || path;
+    if (!filePath.startsWith('/')) filePath = '/' + filePath;
+
+    try {
+      const assetUrl = new URL(request.url);
+      assetUrl.pathname = filePath;
+      let response = await env.ASSETS.fetch(new Request(assetUrl.toString(), request));
+      
+      if (response.status === 404 && !filePath.includes('.')) {
+        const indexUrl = new URL(request.url);
+        indexUrl.pathname = '/index.html';
+        response = await env.ASSETS.fetch(new Request(indexUrl.toString(), request));
+      }
+      
+      if (response.status !== 404) return response;
+    } catch (e) {
+      console.error('KV Asset fetch error:', e);
     }
-    
-    // Para rotas amigáveis (ex: /loja), serve o index.html para o roteamento do frontend
-    const url = new URL(request.url);
-    url.pathname = '/index.html';
-    return fetch(new Request(url.toString(), request));
   }
 
-  // Se env.ASSETS existir (Workers Site), usamos a lógica de busca no KV
-  const routes = {
-    '/': '/index.html',
-    '/loja': '/pages/store.html',
-    '/produto': '/pages/product.html',
-    '/checkout': '/pages/checkout.html',
-    '/login': '/pages/login.html',
-    '/registro': '/pages/register.html',
-    '/dashboard': '/pages/dashboard.html',
-    '/admin': '/pages/admin.html',
-    '/status': '/pages/status.html',
-  };
-
-  let filePath = routes[path] || path;
-  if (!filePath.startsWith('/')) filePath = '/' + filePath;
-
-  try {
-    const assetUrl = new URL(request.url);
-    assetUrl.pathname = filePath;
-    let response = await env.ASSETS.fetch(new Request(assetUrl.toString(), request));
-    
-    if (response.status === 404 && !filePath.includes('.')) {
-      const indexUrl = new URL(request.url);
-      indexUrl.pathname = '/index.html';
-      response = await env.ASSETS.fetch(new Request(indexUrl.toString(), request));
-    }
-
-    return response;
-  } catch (e) {
-    return fetch(request); // Fallback final
-  }
+  // Fallback final: Deixa o Cloudflare lidar com o request original
+  // Isso é crucial para Cloudflare Pages e para evitar timeouts (Erro 522)
+  return fetch(request);
 }
