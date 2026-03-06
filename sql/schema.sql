@@ -228,6 +228,6 @@ INSERT OR IGNORE INTO system_status (service_name, status, message) VALUES
   ('Suporte', 'operational', 'Disponível');
 
 -- Usuário admin padrão (senha: Admin@2024 - TROQUE IMEDIATAMENTE)
--- Hash bcrypt de 'Admin@2024'
+-- Hash SHA-256 (base64) de 'Admin@2024' - compatível com hashPassword() em helpers.js
 INSERT OR IGNORE INTO users (email, username, password_hash, role, bot_limit) VALUES
-  ('admin@srbots.shop', 'admin', '$2a$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewdBPj/RK.s5uOeS', 'admin', 999);
+  ('admin@srbots.shop', 'admin', '0/xQyPcUzr0W1sgngm3wEgW/UZUp+dNHdSk8+bcKQg4=', 'admin', 999);
