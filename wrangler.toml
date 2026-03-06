@@ -10,8 +10,8 @@ database_name = "srbots-db"
 database_id = "" # Preencha com o ID gerado no painel da Cloudflare
 
 # ─── Arquivos Estáticos (Frontend) ─────────────────────────────
-[site]
-bucket = "./public"
+[assets]
+directory = "./public"
 
 # ─── Variáveis de Ambiente e Secrets ────────────────────────────
 # As chaves JWT_SECRET, MISTICPAY_CLIENT_ID, MISTICPAY_CLIENT_SECRET, 
