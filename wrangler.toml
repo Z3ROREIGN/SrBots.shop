@@ -12,6 +12,7 @@ database_id = "" # Preencha com o ID gerado no painel da Cloudflare
 # ─── Arquivos Estáticos (Frontend) ─────────────────────────────
 [assets]
 directory = "./public"
+binding = "ASSETS"
 
 # ─── Variáveis de Ambiente e Secrets ────────────────────────────
 # As chaves JWT_SECRET, MISTICPAY_CLIENT_ID, MISTICPAY_CLIENT_SECRET, 
