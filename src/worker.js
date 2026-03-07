@@ -1,7 +1,12 @@
 /**
  * SrBots.shop - Cloudflare Worker
  * Backend completo: API REST + Servir arquivos estáticos
- * Versão: 1.3.0 (Otimizada para Cloudflare Pages & Workers Site)
+ * Versão: 1.4.0 (Otimizada para Cloudflare Pages & Workers Site)
+ *
+ * Este worker atua como:
+ * - API RESTful para gerenciar produtos, pedidos, pagamentos e usuários
+ * - Middleware de autenticação JWT
+ * - Servidor de arquivos estáticos
  */
 
 import { handleAuth } from './routes/auth.js';
@@ -33,34 +38,44 @@ export default {
 
       // ── Servir arquivos estáticos ─────────────────────────────
       // Se estiver usando Cloudflare Pages, os arquivos são servidos automaticamente
-      // a menos que o Worker intercepte tudo. 
+      // a menos que o Worker intercepte tudo.
       return await serveStatic(request, env, path);
-
     } catch (err) {
       console.error('Worker error:', err);
-      // Retornar o erro detalhado para ajudar o usuário a diagnosticar (D1 missing, etc)
-      return errorResponse(`Erro Interno: ${err.message}. Certifique-se de que o Banco D1 e os Secrets estão configurados no painel da Cloudflare.`, 500);
+      // Retornar o erro detalhado para ajudar o usuário a diagnosticar
+      return errorResponse(
+        `Erro Interno: ${err.message}. Certifique-se de que o Banco D1 e os Secrets estão configurados no painel da Cloudflare.`,
+        500
+      );
     }
-  }
+  },
 };
 
+/**
+ * Roteia requisições de API para os handlers apropriados
+ * @param {Request} request - Requisição HTTP
+ * @param {Object} env - Variáveis de ambiente
+ * @param {Object} ctx - Contexto do worker
+ * @param {string} path - Caminho da requisição
+ * @returns {Promise<Response>} Resposta HTTP
+ */
 async function handleAPI(request, env, ctx, path) {
-  // Webhook MisticPay
+  // Webhook MisticPay (sem autenticação)
   if (path === '/api/webhook/payment' || path === '/api/webhook/misticpay') {
     return await handleWebhook(request, env);
   }
 
-  // Status público
+  // Status público (sem autenticação)
   if (path.startsWith('/api/status')) {
     return await handleStatus(request, env);
   }
 
-  // Autenticação
+  // Autenticação (sem autenticação prévia)
   if (path.startsWith('/api/auth/')) {
     return await handleAuth(request, env);
   }
 
-  // Produtos
+  // Produtos públicos (sem autenticação)
   if (path.startsWith('/api/products')) {
     return await handleProducts(request, env);
   }
@@ -68,31 +83,31 @@ async function handleAPI(request, env, ctx, path) {
   // Rotas protegidas - verificar JWT
   const authResult = await verifyAuth(request, env);
 
-  // Pedidos
+  // Pedidos (requer autenticação)
   if (path.startsWith('/api/orders')) {
     if (!authResult.user) return errorResponse('Não autorizado', 401);
     return await handleOrders(request, env, authResult.user);
   }
 
-  // Pagamentos
+  // Pagamentos (requer autenticação)
   if (path.startsWith('/api/payments')) {
     if (!authResult.user) return errorResponse('Não autorizado', 401);
     return await handlePayments(request, env, authResult.user);
   }
 
-  // Bots do usuário
+  // Bots do usuário (requer autenticação)
   if (path.startsWith('/api/bots')) {
     if (!authResult.user) return errorResponse('Não autorizado', 401);
     return await handleBots(request, env, authResult.user);
   }
 
-  // Perfil do usuário
+  // Perfil do usuário (requer autenticação)
   if (path.startsWith('/api/user')) {
     if (!authResult.user) return errorResponse('Não autorizado', 401);
     return await handleUser(request, env, authResult.user);
   }
 
-  // Painel Admin
+  // Painel Admin (requer autenticação + role admin)
   if (path.startsWith('/api/admin')) {
     if (!authResult.user) return errorResponse('Não autorizado', 401);
     if (authResult.user.role !== 'admin') return errorResponse('Acesso negado', 403);
@@ -102,6 +117,12 @@ async function handleAPI(request, env, ctx, path) {
   return errorResponse('Rota não encontrada', 404);
 }
 
+/**
+ * Verifica e valida o token JWT do request
+ * @param {Request} request - Requisição HTTP
+ * @param {Object} env - Variáveis de ambiente
+ * @returns {Promise<Object>} { user: null | userData }
+ */
 async function verifyAuth(request, env) {
   const authHeader = request.headers.get('Authorization');
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -115,7 +136,9 @@ async function verifyAuth(request, env) {
 
     const session = await env.DB.prepare(
       'SELECT s.*, u.id as uid, u.email, u.username, u.role, u.is_banned, u.bot_limit FROM sessions s JOIN users u ON s.user_id = u.id WHERE s.id = ? AND s.expires_at > datetime("now")'
-    ).bind(payload.sessionId).first();
+    )
+      .bind(payload.sessionId)
+      .first();
 
     if (!session || session.is_banned) return { user: null };
 
@@ -126,14 +149,20 @@ async function verifyAuth(request, env) {
         username: session.username,
         role: session.role,
         bot_limit: session.bot_limit,
-        sessionId: payload.sessionId
-      }
+        sessionId: payload.sessionId,
+      },
     };
   } catch {
     return { user: null };
   }
 }
 
+/**
+ * Verifica a validade de um token JWT
+ * @param {string} token - Token JWT
+ * @param {string} secret - Chave secreta
+ * @returns {Promise<Object|null>} Payload do token ou null se inválido
+ */
 async function verifyJWT(token, secret) {
   try {
     const parts = token.split('.');
@@ -141,9 +170,11 @@ async function verifyJWT(token, secret) {
 
     const encoder = new TextEncoder();
     const key = await crypto.subtle.importKey(
-      'raw', encoder.encode(secret),
+      'raw',
+      encoder.encode(secret),
       { name: 'HMAC', hash: 'SHA-256' },
-      false, ['sign', 'verify']
+      false,
+      ['sign', 'verify']
     );
 
     const data = encoder.encode(`${parts[0]}.${parts[1]}`);
@@ -151,7 +182,9 @@ async function verifyJWT(token, secret) {
     const valid = await crypto.subtle.verify('HMAC', key, sig, data);
     if (!valid) return null;
 
-    const payload = JSON.parse(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')));
+    const payload = JSON.parse(
+      atob(parts[1].replace(/-/g, '+').replace(/_/g, '/'))
+    );
     if (payload.exp && payload.exp < Math.floor(Date.now() / 1000)) return null;
 
     return payload;
@@ -160,15 +193,27 @@ async function verifyJWT(token, secret) {
   }
 }
 
+/**
+ * Decodifica uma string base64 URL-safe
+ * @param {string} str - String base64 URL-safe
+ * @returns {ArrayBuffer} Buffer decodificado
+ */
 function base64UrlDecode(str) {
   const base64 = str.replace(/-/g, '+').replace(/_/g, '/');
-  const padded = base64.padEnd(base64.length + (4 - base64.length % 4) % 4, '=');
+  const padded = base64.padEnd(base64.length + ((4 - (base64.length % 4)) % 4), '=');
   const binary = atob(padded);
   const bytes = new Uint8Array(binary.length);
   for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
   return bytes.buffer;
 }
 
+/**
+ * Serve arquivos estáticos do Cloudflare Pages/Workers Site
+ * @param {Request} request - Requisição HTTP
+ * @param {Object} env - Variáveis de ambiente
+ * @param {string} path - Caminho do arquivo
+ * @returns {Promise<Response>} Resposta HTTP
+ */
 async function serveStatic(request, env, path) {
   // Se houver ASSETS (Workers Site), tentamos carregar do KV
   if (env.ASSETS) {
@@ -191,13 +236,13 @@ async function serveStatic(request, env, path) {
       const assetUrl = new URL(request.url);
       assetUrl.pathname = filePath;
       let response = await env.ASSETS.fetch(new Request(assetUrl.toString(), request));
-      
+
       if (response.status === 404 && !filePath.includes('.')) {
         const indexUrl = new URL(request.url);
         indexUrl.pathname = '/index.html';
         response = await env.ASSETS.fetch(new Request(indexUrl.toString(), request));
       }
-      
+
       if (response.status !== 404) return response;
     } catch (e) {
       console.error('KV Asset fetch error:', e);

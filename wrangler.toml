@@ -1,19 +1,45 @@
-# Configuração do Cloudflare Worker SrBots.shop
+# ============================================================
+# Configuração do Cloudflare Worker - SrBots.shop
+# ============================================================
+# Este arquivo configura o deployment do worker na Cloudflare
+# Versão: 1.4.0
+
+# ── Informações do Projeto ─────────────────────────────────
 name = "srbots"
 main = "src/worker.js"
-compatibility_date = "2023-12-01"
+compatibility_date = "2024-01-01"
+compatibility_flags = ["nodejs_compat"]
 
-# ─── Banco de Dados D1 ──────────────────────────────────────────
+# ── Banco de Dados D1 ──────────────────────────────────────
+# Configure o database_id após criar o banco no painel Cloudflare
 [[d1_databases]]
 binding = "DB"
 database_name = "srbots-db"
-database_id = "" # Preencha com o ID gerado no painel da Cloudflare
+database_id = ""  # Preencha com o ID gerado no painel da Cloudflare
 
-# ─── Arquivos Estáticos (Frontend) ─────────────────────────────
+# ── Arquivos Estáticos (Frontend) ──────────────────────────
 [assets]
 directory = "./public"
 
-# ─── Variáveis de Ambiente e Secrets ────────────────────────────
-# As chaves JWT_SECRET, MISTICPAY_CLIENT_ID, MISTICPAY_CLIENT_SECRET, 
-# ADMIN_EMAIL e ADMIN_PASSWORD devem ser configuradas no painel 
-# da Cloudflare em Settings > Variables > Secrets.
+# ── Variáveis de Ambiente ──────────────────────────────────
+# Variáveis públicas (não sensíveis)
+[env.production]
+vars = { ENVIRONMENT = "production" }
+
+[env.staging]
+vars = { ENVIRONMENT = "staging" }
+
+# ── Secrets (Variáveis Sensíveis) ──────────────────────────
+# IMPORTANTE: Configure estas variáveis no painel Cloudflare
+# em Settings > Variables > Secrets, NÃO neste arquivo
+#
+# Secrets obrigatórios:
+# - JWT_SECRET: String longa e aleatória para assinatura de tokens
+# - MISTICPAY_CLIENT_ID: Client ID da MisticPay
+# - MISTICPAY_CLIENT_SECRET: Client Secret da MisticPay
+# - ADMIN_EMAIL: Email do primeiro usuário admin
+# - ADMIN_PASSWORD: Senha do primeiro usuário admin
+#
+# Secrets opcionais:
+# - ALLOWED_ORIGIN: CORS origin (padrão: *)
+# - WEBHOOK_SECRET: Secret para validação de webhooks

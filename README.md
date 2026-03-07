@@ -1,56 +1,98 @@
-# SrBots.shop — Loja de Produtos Digitais
+# SrBots.shop — Loja de Produtos Digitais Serverless
 
-Este é o código-fonte completo para a loja SrBots.shop, construída para ser hospedada na plataforma da Cloudflare (Workers, D1, Pages).
+![SrBots.shop](https://i.imgur.com/example.png)  <!-- Substituir por um banner real -->
 
-## 🚀 Visão Geral da Arquitetura
+**SrBots.shop** é uma plataforma de e-commerce de código aberto, construída para a venda de produtos digitais como bots, scripts e códigos-fonte. A arquitetura é totalmente serverless, utilizando o ecossistema da Cloudflare para alta performance, escalabilidade e baixo custo.
 
-- **Backend**: Cloudflare Worker (`src/worker.js`) atuando como uma API RESTful.
-- **Frontend**: HTML, CSS e JavaScript puros, servidos como um site estático via Cloudflare Pages.
-- **Banco de Dados**: Cloudflare D1, um banco de dados SQL serverless.
-- **Pagamentos**: Integração com a MisticPay para pagamentos via Pix.
+[![Status](https://img.shields.io/badge/status-ativo-success.svg)](https://srbots.shop/status) [![Licença](https://img.shields.io/badge/licença-MIT-blue.svg)](/LICENSE) [![Discord](https://img.shields.io/discord/your-server-id?label=Discord&logo=discord)](https://discord.gg/srbots)
 
-## 🛠️ Guia de Configuração (Painel Cloudflare)
+## ✨ Funcionalidades Principais
 
-Siga estes passos para configurar sua loja agora que o código já está no GitHub.
+- **Loja Completa**: Catálogo de produtos, categorias, busca e filtros.
+- **Pagamentos Automatizados**: Integração com Pix via MisticPay.
+- **Entrega Instantânea**: Produtos digitais entregues automaticamente após a confirmação do pagamento.
+- **Painel do Cliente**: Área para gerenciar compras, downloads e perfil.
+- **Painel de Administração**: Gerenciamento completo de produtos, usuários, pedidos, configurações e mais.
+- **Hospedagem de Bots**: Sistema para gerenciar e monitorar bots (ex: Discord).
+- **Página de Status**: Monitoramento em tempo real dos serviços da plataforma.
+- **Segurança**: Autenticação JWT, CORS, hashing de senhas e logging de atividades.
 
-### Passo 1: Configurar o Banco de Dados D1
+## 🚀 Arquitetura Tecnológica
 
-No painel da Cloudflare:
-1. Vá para **D1 SQL**.
+A plataforma foi desenhada para ser robusta, segura e escalável, utilizando as seguintes tecnologias:
+
+| Componente      | Tecnologia                                       | Descrição                                                                 |
+| --------------- | ------------------------------------------------ | ------------------------------------------------------------------------- |
+| **Backend**     | [Cloudflare Workers][1]                          | API RESTful serverless para todas as operações de backend.                |
+| **Frontend**    | HTML, CSS, JavaScript (Vanilla)                  | Interface de usuário estática, servida com alta performance.              |
+| **Banco de Dados**| [Cloudflare D1][2]                               | Banco de dados SQL serverless, otimizado para o ambiente da Cloudflare.   |
+| **Deployment**  | [Cloudflare Pages][3]                            | Plataforma para deploy contínuo do frontend e integração com o Worker.    |
+| **Pagamentos**  | [MisticPay][4]                                   | Gateway de pagamento para transações via Pix com confirmação automática.  |
+
+[1]: https://workers.cloudflare.com/
+[2]: https://developers.cloudflare.com/d1/
+[3]: https://pages.cloudflare.com/
+[4]: https://misticpay.com/
+
+## 🛠️ Guia de Instalação e Configuração
+
+Siga estes passos para configurar e implantar sua própria instância da SrBots.shop.
+
+### Pré-requisitos
+
+- Conta na [Cloudflare](https://dash.cloudflare.com/sign-up)
+- [Node.js](https://nodejs.org/) e [npm](https://www.npmjs.com/)
+- [Wrangler CLI](https://developers.cloudflare.com/workers/wrangler/install-and-update/) instalado e autenticado
+
+### Passo 1: Clonar o Repositório
+
+```bash
+gh repo clone Z3ROREIGN/SrBots.shop
+cd SrBots.shop
+```
+
+### Passo 2: Configurar o Banco de Dados D1
+
+1. No painel da Cloudflare, vá para **Workers & Pages > D1**.
 2. Clique em **Create database**.
-3. Dê o nome `srbots-db` e clique em **Create**.
-4. Copie o `database_id` e cole no arquivo `wrangler.toml` no seu GitHub.
-5. Clique no seu banco de dados, vá em **Console** e execute o conteúdo do arquivo `sql/schema.sql` para criar as tabelas.
+3. Dê o nome `srbots-db` e selecione uma localização.
+4. Na aba **Console**, execute o conteúdo do arquivo `sql/schema.sql` para criar todas as tabelas.
+5. Copie o `Database ID` do seu banco de dados.
+6. Abra o arquivo `wrangler.toml` e cole o ID no campo `database_id`.
 
-### Passo 2: Configurar as Chaves Secretas (Secrets)
+### Passo 3: Configurar as Variáveis de Ambiente (Secrets)
 
-No painel da Cloudflare:
-1. Vá para **Workers & Pages**.
-2. Selecione seu projeto `srbots-shop`.
-3. Vá na aba **Settings** > **Variables**.
-4. Na seção **Secrets**, clique em **Add variable** para cada uma das chaves abaixo:
+No painel da Cloudflare, navegue até o seu projeto e vá em **Settings > Variables**. Adicione as seguintes variáveis na seção **Environment Variables**, clicando em **Add variable** e marcando a opção **Encrypt** para cada uma.
 
-- **`JWT_SECRET`**: Uma string longa e aleatória para a autenticação.
-- **`MISTICPAY_CLIENT_ID`**: Seu Client ID da MisticPay.
-- **`MISTICPAY_CLIENT_SECRET`**: Seu Client Secret da MisticPay.
-- **`ADMIN_EMAIL`**: Email para o primeiro acesso ao painel admin.
-- **`ADMIN_PASSWORD`**: Senha para o primeiro acesso ao painel admin.
+| Variável                  | Descrição                                                                 |
+| ------------------------- | ------------------------------------------------------------------------- |
+| `JWT_SECRET`              | Uma string longa e aleatória para a segurança da autenticação.            |
+| `MISTICPAY_CLIENT_ID`     | Seu Client ID da MisticPay.                                               |
+| `MISTICPAY_CLIENT_SECRET` | Seu Client Secret da MisticPay.                                           |
+| `ADMIN_EMAIL`             | Email para o primeiro acesso ao painel de administração.                  |
+| `ADMIN_PASSWORD`          | Senha para o primeiro acesso ao painel de administração.                  |
 
-Clique em **Save and deploy**.
+### Passo 4: Deploy na Cloudflare
 
-### Passo 3: Configurar Webhook na MisticPay
+Conecte seu repositório do GitHub ao Cloudflare Pages para deploy automático. A Cloudflare irá detectar o `wrangler.toml` e configurar o build e o deploy do Worker e dos assets estáticos.
 
-Para que os pagamentos sejam confirmados automaticamente:
+### Passo 5: Configurar o Webhook de Pagamento
+
 1. No painel da MisticPay, vá para a seção de Webhooks.
-2. Adicione uma nova URL de webhook apontando para:
-   `https://srbots.shop/api/webhook/payment`
-3. Selecione os eventos relacionados a pagamentos.
+2. Adicione uma nova URL de webhook apontando para: `https://<seu-dominio>.com/api/webhook/payment`
+3. Selecione os eventos relacionados a pagamentos para receber as notificações.
 
-## ⚙️ Pós-Configuração
+## 🤝 Contribuição
 
-1. Acesse seu painel de administrador em `https://srbots.shop/admin`.
-2. Faça login com as credenciais de `ADMIN_EMAIL` e `ADMIN_PASSWORD` que você configurou.
-3. Vá para a aba **Configurações** para preencher os dados do site e da MisticPay.
-4. Comece a criar suas categorias e produtos!
+Contribuições são muito bem-vindas! Se você deseja melhorar o projeto, por favor, leia nosso [Guia de Contribuição](CONTRIBUTING.md) para entender nossos padrões de código e processo de pull request.
 
-O sistema está 100% pronto e funcional.
+- [Reportar um Bug](https://github.com/Z3ROREIGN/SrBots.shop/issues/new?assignees=&labels=bug&template=bug_report.md&title=)
+- [Sugerir uma Melhoria](https://github.com/Z3ROREIGN/SrBots.shop/issues/new?assignees=&labels=enhancement&template=feature_request.md&title=)
+
+## 🛡️ Segurança
+
+Levamos a segurança a sério. Se você encontrar uma vulnerabilidade, por favor, siga as diretrizes em nossa [Política de Segurança](SECURITY.md).
+
+## 📄 Licença
+
+Este projeto está licenciado sob a **Licença MIT**. Veja o arquivo [LICENSE](LICENSE) para mais detalhes.
