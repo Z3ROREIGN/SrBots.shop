@@ -23,12 +23,17 @@ const API = {
 
     try {
       const res = await fetch(`${CONFIG.API_BASE}${endpoint}`, options);
-      const json = await res.json();
+      let json = null;
+      try {
+        json = await res.json();
+      } catch {
+        json = { error: 'Resposta inválida do servidor.' };
+      }
 
       if (res.status === 401) {
         Auth.logout();
-        if (!window.location.pathname.includes('/login')) {
-          window.location.href = '/login?redirect=' + encodeURIComponent(window.location.pathname);
+        if (!window.location.pathname.includes('/entrar')) {
+          window.location.href = '/entrar?redirect=' + encodeURIComponent(window.location.pathname);
         }
         return { error: 'Sessão expirada' };
       }
@@ -72,7 +77,7 @@ const Auth = {
 
   requireAuth() {
     if (!this.isLoggedIn()) {
-      window.location.href = '/login?redirect=' + encodeURIComponent(window.location.pathname);
+      window.location.href = '/entrar?redirect=' + encodeURIComponent(window.location.pathname);
       return false;
     }
     return true;
@@ -255,10 +260,22 @@ function initNavbar() {
 
   // Mobile menu
   const mobileBtn = document.querySelector('.navbar-mobile-btn');
-  const navMenu = document.querySelector('.navbar-nav-mobile');
+  const navMenu = document.querySelector('.navbar-nav-mobile') || document.getElementById('mobile-nav');
   if (mobileBtn && navMenu) {
     mobileBtn.addEventListener('click', () => {
-      navMenu.classList.toggle('active');
+      const isOpen = navMenu.classList.toggle('active');
+      if (navMenu.id === 'mobile-nav') {
+        navMenu.style.display = isOpen ? 'block' : 'none';
+      }
+      mobileBtn.setAttribute('aria-expanded', String(isOpen));
+    });
+
+    navMenu.querySelectorAll('a').forEach(link => {
+      link.addEventListener('click', () => {
+        navMenu.classList.remove('active');
+        if (navMenu.id === 'mobile-nav') navMenu.style.display = 'none';
+        mobileBtn.setAttribute('aria-expanded', 'false');
+      });
     });
   }
 
@@ -282,7 +299,7 @@ function initNavbar() {
       `;
     } else {
       authSection.innerHTML = `
-        <a href="/login" class="btn btn-secondary btn-sm">Entrar</a>
+        <a href="/entrar" class="btn btn-secondary btn-sm">Entrar</a>
         <a href="/registro" class="btn btn-primary btn-sm">Criar Conta</a>
       `;
     }

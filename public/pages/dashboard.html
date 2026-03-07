@@ -11,7 +11,7 @@
 <body>
 <nav class="navbar">
   <div class="navbar-inner">
-    <a href="/" class="navbar-logo"><div class="logo-icon">🤖</div><span class="gradient-text">SrBots</span></a>
+    <a href="/" class="navbar-logo"><div class="logo-icon"><img src="/assets/img/srbots-logo.svg" alt="SrBots" class="brand-logo"></div><span class="gradient-text">SrBots</span></a>
     <ul class="navbar-nav">
       <li><a href="/">Início</a></li>
       <li><a href="/loja">Loja</a></li>
@@ -409,7 +409,7 @@
     const res = await API.put('/user/password', { current_password: current, new_password: newPass });
     if (res.error) { Toast.error(res.error); return; }
     Toast.success('Senha alterada! Faça login novamente.');
-    setTimeout(() => { Auth.logout(); window.location.href = '/login'; }, 2000);
+    setTimeout(() => { Auth.logout(); window.location.href = '/entrar'; }, 2000);
   }
 
   function showDelivery(data, productName) {

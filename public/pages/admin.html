@@ -27,7 +27,7 @@
 <body>
 <nav class="navbar">
   <div class="navbar-inner">
-    <a href="/" class="navbar-logo"><div class="logo-icon">🤖</div><span class="gradient-text">SrBots</span> <span class="badge badge-red font-xs" style="margin-left:0.25rem">ADMIN</span></a>
+    <a href="/" class="navbar-logo"><div class="logo-icon"><img src="/assets/img/srbots-logo.svg" alt="SrBots" class="brand-logo"></div><span class="gradient-text">SrBots</span> <span class="badge badge-red font-xs" style="margin-left:0.25rem">ADMIN</span></a>
     <div class="navbar-actions">
       <a href="/dashboard" class="btn btn-secondary btn-sm">Dashboard</a>
       <button onclick="handleLogout()" class="btn btn-ghost btn-sm">Sair</button>
@@ -520,8 +520,8 @@
         <td><span class="badge ${p.is_active ? 'badge-green' : 'badge-red'}">${p.is_active ? 'Ativo' : 'Inativo'}</span></td>
         <td>
           <div style="display:flex;gap:0.5rem">
-            <button class="btn btn-secondary btn-sm" onclick="editProduct(${p.id})">✏️</button>
-            <button class="btn btn-danger btn-sm" onclick="deleteProduct(${p.id}, '${p.name.replace(/'/g,"\\'")}')">🗑</button>
+            <button class="btn btn-secondary btn-sm" onclick="editProduct(${p.id})">Editar</button>
+            <button class="btn btn-danger btn-sm" onclick="deleteProduct(${p.id}, '${p.name.replace(/'/g,"\\'")}')">Excluir</button>
           </div>
         </td>
       </tr>
@@ -643,8 +643,8 @@
         <td><span class="badge ${c.is_active ? 'badge-green' : 'badge-red'}">${c.is_active ? 'Ativo' : 'Inativo'}</span></td>
         <td>
           <div style="display:flex;gap:0.5rem">
-            <button class="btn btn-secondary btn-sm" onclick="editCategory(${c.id})">✏️</button>
-            <button class="btn btn-danger btn-sm" onclick="deleteCategory(${c.id})">🗑</button>
+            <button class="btn btn-secondary btn-sm" onclick="editCategory(${c.id})">Editar</button>
+            <button class="btn btn-danger btn-sm" onclick="deleteCategory(${c.id})">Excluir</button>
           </div>
         </td>
       </tr>
@@ -715,7 +715,7 @@
         <td>${c.max_uses || '∞'}</td>
         <td class="text-muted font-xs">${c.expires_at ? Utils.formatDateShort(c.expires_at) : '—'}</td>
         <td><span class="badge ${c.is_active ? 'badge-green' : 'badge-red'}">${c.is_active ? 'Ativo' : 'Inativo'}</span></td>
-        <td><button class="btn btn-danger btn-sm" onclick="deleteCoupon(${c.id})">🗑</button></td>
+        <td><button class="btn btn-danger btn-sm" onclick="deleteCoupon(${c.id})">Excluir</button></td>
       </tr>
     `).join('');
   }
@@ -771,8 +771,8 @@
           <td class="text-muted font-xs">${Utils.formatDateShort(o.created_at)}</td>
           <td>
             <div style="display:flex;gap:0.5rem">
-              <button class="btn btn-secondary btn-sm" onclick="viewOrder(${o.id})">👁</button>
-              ${o.status === 'pending' ? `<button class="btn btn-success btn-sm" onclick="markOrderPaid(${o.id})">✓ Pago</button>` : ''}
+              <button class="btn btn-secondary btn-sm" onclick="viewOrder(${o.id})">Ver</button>
+              ${o.status === 'pending' ? `<button class="btn btn-success btn-sm" onclick="markOrderPaid(${o.id})">Marcar Pago</button>` : ''}
             </div>
           </td>
         </tr>
@@ -801,7 +801,7 @@
         </div>
         ${o.delivery_data ? `<div><span class="text-muted">Entrega:</span><pre style="background:var(--bg-input);padding:0.75rem;border-radius:var(--radius-md);font-size:0.75rem;overflow:auto;margin-top:0.5rem">${JSON.stringify(o.delivery_data, null, 2)}</pre></div>` : ''}
         <div style="display:flex;gap:0.75rem;margin-top:0.5rem">
-          ${o.status === 'pending' ? `<button class="btn btn-success btn-sm" onclick="markOrderPaid(${o.id});closeModal('order-modal')">✓ Marcar como Pago</button>` : ''}
+          ${o.status === 'pending' ? `<button class="btn btn-success btn-sm" onclick="markOrderPaid(${o.id});closeModal('order-modal')">Marcar como Pago</button>` : ''}
           ${o.status === 'paid' ? `<button class="btn btn-secondary btn-sm" onclick="markOrderDelivered(${o.id});closeModal('order-modal')">📦 Marcar Entregue</button>` : ''}
         </div>
       </div>
@@ -840,16 +840,16 @@
         <td>
           <div style="display:flex;align-items:center;gap:0.5rem">
             <span>${u.bot_limit}</span>
-            <button class="btn btn-ghost btn-sm" onclick="quickUpdateBotLimit(${u.id}, ${u.bot_limit})" title="Alterar limite">✏️</button>
+            <button class="btn btn-ghost btn-sm" onclick="quickUpdateBotLimit(${u.id}, ${u.bot_limit})" title="Alterar limite">Alterar</button>
           </div>
         </td>
         <td><span class="badge ${u.is_banned ? 'badge-red' : 'badge-green'}">${u.is_banned ? '🚫 Banido' : '✓ Ativo'}</span></td>
         <td>
           <div style="display:flex;gap:0.25rem;flex-wrap:wrap">
-            <button class="btn btn-secondary btn-sm" onclick="editUser(${u.id})" title="Editar">✏️</button>
+            <button class="btn btn-secondary btn-sm" onclick="editUser(${u.id})" title="Editar">Editar</button>
             ${u.is_banned
-              ? `<button class="btn btn-success btn-sm" onclick="unbanUser(${u.id})" title="Desbanir">✓</button>`
-              : `<button class="btn btn-danger btn-sm" onclick="openBanModal(${u.id})" title="Banir">🚫</button>`
+              ? `<button class="btn btn-success btn-sm" onclick="unbanUser(${u.id})" title="Desbanir">Desbanir</button>`
+              : `<button class="btn btn-danger btn-sm" onclick="openBanModal(${u.id})" title="Banir">Banir</button>`
             }
           </div>
         </td>
@@ -949,7 +949,7 @@
                 <option value="suspended" ${b.status==='suspended'?'selected':''}>Suspenso</option>
                 <option value="error" ${b.status==='error'?'selected':''}>Erro</option>
               </select>
-              <button class="btn btn-danger btn-sm" onclick="adminDeleteBot(${b.id})">🗑</button>
+              <button class="btn btn-danger btn-sm" onclick="adminDeleteBot(${b.id})">Excluir</button>
             </div>
           </td>
         </tr>

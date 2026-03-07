@@ -19,7 +19,7 @@
 <nav class="navbar">
   <div class="navbar-inner">
     <a href="/" class="navbar-logo">
-      <div class="logo-icon">🤖</div>
+      <div class="logo-icon"><img src="/assets/img/srbots-logo.svg" alt="SrBots" class="brand-logo"></div>
       <span class="gradient-text">SrBots</span>
     </a>
     <ul class="navbar-nav" id="navbar-nav">
@@ -29,7 +29,7 @@
     </ul>
     <div class="navbar-actions">
       <div id="navbar-auth"></div>
-      <button class="navbar-mobile-btn" onclick="toggleMobileMenu()">☰</button>
+      <button class="navbar-mobile-btn" aria-expanded="false" aria-controls="mobile-nav">☰</button>
     </div>
   </div>
   <!-- Mobile Nav -->
@@ -176,7 +176,7 @@
     <div class="footer-grid">
       <div class="footer-brand">
         <div class="footer-brand-logo">
-          <div class="logo-icon" style="width:32px;height:32px;background:var(--gradient-primary);border-radius:var(--radius-md);display:flex;align-items:center;justify-content:center;font-size:1rem">🤖</div>
+          <div class="logo-icon" style="width:32px;height:32px"><img src="/assets/img/srbots-logo.svg" alt="SrBots" class="brand-logo"></div>
           <span class="gradient-text">SrBots</span>
         </div>
         <p class="footer-brand-desc">A melhor loja de bots Discord, scripts e painéis do Brasil. Entrega automática, pagamento via Pix.</p>
@@ -199,7 +199,7 @@
       <div class="footer-col">
         <h4>Conta</h4>
         <ul>
-          <li><a href="/login">Entrar</a></li>
+          <li><a href="/entrar">Entrar</a></li>
           <li><a href="/registro">Criar Conta</a></li>
           <li><a href="/dashboard">Dashboard</a></li>
           <li><a href="/dashboard#purchases">Minhas Compras</a></li>
@@ -211,6 +211,8 @@
           <li><a href="/status">Status do Sistema</a></li>
           <li><a href="https://discord.gg/srbots" target="_blank">Discord</a></li>
           <li><a href="mailto:contato@srbots.shop">Email</a></li>
+          <li><a href="/termos">Termos de Uso</a></li>
+          <li><a href="/privacidade">Política de Privacidade</a></li>
         </ul>
       </div>
     </div>
@@ -223,11 +225,6 @@
 
 <script src="/assets/js/app.js"></script>
 <script>
-  function toggleMobileMenu() {
-    const nav = document.getElementById('mobile-nav');
-    nav.style.display = nav.style.display === 'none' ? 'block' : 'none';
-  }
-
   // Carregar estatísticas
   async function loadStats() {
     const res = await API.get('/status', false);

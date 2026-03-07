@@ -221,12 +221,17 @@ async function serveStatic(request, env, path) {
       '/': '/index.html',
       '/loja': '/pages/store.html',
       '/produto': '/pages/product.html',
-      '/checkout': '/pages/checkout.html',
+      '/entrar': '/pages/login.html',
       '/login': '/pages/login.html',
       '/registro': '/pages/register.html',
+      '/cadastro': '/pages/register.html',
       '/dashboard': '/pages/dashboard.html',
       '/admin': '/pages/admin.html',
       '/status': '/pages/status.html',
+      '/termos': '/pages/terms.html',
+      '/terms': '/pages/terms.html',
+      '/privacidade': '/pages/privacy.html',
+      '/privacy': '/pages/privacy.html',
     };
 
     let filePath = routes[path] || path;

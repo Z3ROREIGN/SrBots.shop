@@ -11,7 +11,7 @@
 <body>
 <nav class="navbar">
   <div class="navbar-inner">
-    <a href="/" class="navbar-logo"><div class="logo-icon">🤖</div><span class="gradient-text">SrBots</span></a>
+    <a href="/" class="navbar-logo"><div class="logo-icon"><img src="/assets/img/srbots-logo.svg" alt="SrBots" class="brand-logo"></div><span class="gradient-text">SrBots</span></a>
     <ul class="navbar-nav">
       <li><a href="/">Início</a></li>
       <li><a href="/loja" class="active">Loja</a></li>
@@ -323,7 +323,7 @@
 
   function openBuyModal() {
     if (!Auth.isLoggedIn()) {
-      window.location.href = `/login?redirect=${encodeURIComponent(window.location.href)}`;
+      window.location.href = `/entrar?redirect=${encodeURIComponent(window.location.href)}`;
       return;
     }
     openModal('buy-modal');
