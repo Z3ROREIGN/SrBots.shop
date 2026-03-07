@@ -249,7 +249,9 @@ async function serveStatic(request, env, path) {
     }
   }
 
-  // Fallback final: Deixa o Cloudflare lidar com o request original
-  // Isso é crucial para Cloudflare Pages e para evitar timeouts (Erro 522)
-  return fetch(request);
+  // Fallback: retornar página 404 ao invés de fetch(request) que causa loop infinito (Erro 522)
+  return new Response('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>404 - SrBots</title><style>body{background:#0a0a0f;color:#f1f5f9;font-family:Inter,sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0}div{text-align:center}h1{font-size:4rem;background:linear-gradient(135deg,#7c3aed,#06b6d4);-webkit-background-clip:text;-webkit-text-fill-color:transparent}a{color:#9d5af0;text-decoration:none}</style></head><body><div><h1>404</h1><p>Página não encontrada</p><br><a href="/">Voltar ao início</a></div></body></html>', {
+    status: 404,
+    headers: { 'Content-Type': 'text/html;charset=UTF-8' },
+  });
 }

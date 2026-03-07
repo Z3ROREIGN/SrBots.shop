@@ -20,6 +20,7 @@ database_id = ""  # Preencha com o ID gerado no painel da Cloudflare
 # ── Arquivos Estáticos (Frontend) ──────────────────────────
 [assets]
 directory = "./public"
+binding = "ASSETS"
 
 # ── Variáveis de Ambiente ──────────────────────────────────
 # Variáveis públicas (não sensíveis)

@@ -45,7 +45,10 @@ export function jsonResponse(data, status = 200, env = null) {
 export function errorResponse(message, status = 400, details = null) {
   return new Response(JSON.stringify({ error: message, details }), {
     status,
-    headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
+    headers: {
+      'Content-Type': 'application/json',
+      ...corsHeaders(),
+    },
   });
 }
 
@@ -59,7 +62,10 @@ export function errorResponse(message, status = 400, details = null) {
 export function successResponse(data, message = 'Sucesso', status = 200) {
   return new Response(JSON.stringify({ success: true, message, data }), {
     status,
-    headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
+    headers: {
+      'Content-Type': 'application/json',
+      ...corsHeaders(),
+    },
   });
 }
 
